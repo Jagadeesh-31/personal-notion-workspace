@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const { Server } = require('socket.io');
 const querystring = require('querystring');
 
 const PORT = 8000;
@@ -24,7 +24,6 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
     let safeUrl = req.url.split('?')[0];
     
-    // API endpoint: Save current workspace state to state.json
     if (safeUrl === '/api/save-state' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => body += chunk);
@@ -33,6 +32,9 @@ const server = http.createServer((req, res) => {
                 fs.writeFileSync(STATE_PATH, body, 'utf8');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true }));
+                
+                // BROADCAST real-time update to all clients
+                io.emit('workUpdate', JSON.parse(body));
             } catch (err) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, error: err.message }));
@@ -41,7 +43,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // API endpoint: Load current workspace state from state.json
     if (safeUrl === '/api/load-state' && req.method === 'GET') {
         try {
             if (fs.existsSync(STATE_PATH)) {
@@ -62,7 +63,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Serve static assets
     if (safeUrl === '/') safeUrl = '/index.html';
     const filePath = path.join(PUBLIC_DIR, safeUrl);
 
@@ -90,14 +90,24 @@ const server = http.createServer((req, res) => {
     });
 });
 
-function readState() {
-    if (!fs.existsSync(STATE_PATH)) return {};
-    return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
-}
+// Socket.io setup
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
 
-function writeState(state) {
-    fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2), 'utf8');
-}
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    
+    // Send current state on connection
+    if (fs.existsSync(STATE_PATH)) {
+        const state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+        socket.emit('initialState', state);
+    }
+    
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
 
 server.listen(PORT, () => {
     console.log(`\n🚀 Notion Study Workspace is live!\n`);

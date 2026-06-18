@@ -9,5 +9,8 @@
   },
   "keywords": ["productivity", "notion", "study-planner", "habits", "streaks"],
   "author": "Personal Workspace",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "socket.io": "^4.7.0"
+  }
 }

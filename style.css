@@ -2294,4 +2294,121 @@ input:checked + .slider:before {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
 }
 
+/* ==========================================================================
+   Cloud Sync Status Badge & Settings
+   ========================================================================== */
 
+.cloud-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card-hover);
+    color: var(--text-muted);
+    margin-left: 8px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    vertical-align: middle;
+}
+
+.cloud-status-synced {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #10b981;
+}
+
+.cloud-status-syncing {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #3b82f6;
+    animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+.cloud-status-error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+}
+
+.cloud-status-offline {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+@keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.cloud-sync-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.cloud-sync-card h3 {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cloud-setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--bg-card-hover);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.cloud-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+.step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.step-content strong {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+.step-content span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.settings-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+.settings-link:hover { text-decoration: underline; }

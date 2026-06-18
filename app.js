@@ -167,6 +167,118 @@ let state = {
 
 // LocalStorage Persistence Keys
 const STORAGE_KEY = "personal_notion_workspace_state";
+const CLOUD_KEY = "notion_cloud_config"; // stores { apiKey, binId } in localStorage
+
+// ==========================================================================
+// Cloud Sync (JSONBin.io) — Free real-time cross-device tracking
+// ==========================================================================
+
+function getCloudConfig() {
+    try {
+        const raw = localStorage.getItem(CLOUD_KEY);
+        return raw ? JSON.parse(raw) : { apiKey: '', binId: '' };
+    } catch (e) { return { apiKey: '', binId: '' }; }
+}
+
+function setCloudConfig(apiKey, binId) {
+    localStorage.setItem(CLOUD_KEY, JSON.stringify({ apiKey, binId }));
+}
+
+function isCloudEnabled() {
+    const cfg = getCloudConfig();
+    return cfg.apiKey && cfg.binId;
+}
+
+// Push state to JSONBin cloud
+function syncToCloud() {
+    const cfg = getCloudConfig();
+    if (!cfg.apiKey || !cfg.binId) return;
+
+    const payload = { ...state };
+    delete payload.customCovers; // skip large base64 images from cloud sync
+
+    fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': cfg.apiKey
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(() => {
+        updateCloudSyncStatus('synced');
+    })
+    .catch(err => {
+        console.warn('Cloud sync failed:', err.message);
+        updateCloudSyncStatus('error');
+    });
+}
+
+// Fetch latest state from JSONBin cloud
+function loadFromCloud(callback) {
+    const cfg = getCloudConfig();
+    if (!cfg.apiKey || !cfg.binId) { callback(null); return; }
+
+    fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
+        headers: { 'X-Master-Key': cfg.apiKey }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data && data.record) {
+            callback(data.record);
+        } else {
+            callback(null);
+        }
+    })
+    .catch(err => {
+        console.warn('Cloud load failed:', err.message);
+        callback(null);
+    });
+}
+
+// Create a new JSONBin bin
+function createCloudBin(apiKey, callback) {
+    fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': apiKey,
+            'X-Bin-Name': 'PersonalNotionWorkspace',
+            'X-Bin-Private': 'true'
+        },
+        body: JSON.stringify({ initialized: true, lastUpdatedTime: Date.now() })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data && data.metadata && data.metadata.id) {
+            callback(null, data.metadata.id);
+        } else {
+            callback('Could not create bin. Check your API key.');
+        }
+    })
+    .catch(err => callback(err.message));
+}
+
+function updateCloudSyncStatus(status) {
+    const el = document.getElementById('cloud-sync-status');
+    if (!el) return;
+    const icons = { synced: '☁️', error: '❌', syncing: '🔄', offline: '💾' };
+    const labels = { synced: 'Cloud synced just now', error: 'Sync failed — check API key', syncing: 'Syncing to cloud...', offline: 'Local only (no cloud configured)' };
+    el.textContent = `${icons[status] || '💾'} ${labels[status] || status}`;
+    el.className = `cloud-status-badge cloud-status-${status}`;
+}
+
+// Debounced cloud sync (don't hammer the API on every keystroke)
+let cloudSyncTimer = null;
+function scheduledCloudSync() {
+    if (!isCloudEnabled()) return;
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+        updateCloudSyncStatus('syncing');
+        syncToCloud();
+    }, 2000); // 2s debounce
+}
 
 // Load State from LocalStorage
 function loadState() {
@@ -199,11 +311,12 @@ function loadState() {
     }
 }
 
-// Save State to LocalStorage
+// Save State to LocalStorage + trigger cloud sync
 function saveState() {
     try {
         state.lastUpdatedTime = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        scheduledCloudSync();
     } catch (e) {
         console.error("Error saving state", e);
     }
@@ -1578,56 +1691,50 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
     function startServerSyncPolling() {
         if (pollInterval) clearInterval(pollInterval);
 
+        // Poll cloud every 30 seconds for updates from other devices
         pollInterval = setInterval(() => {
-            fetch("/api/load-state")
-                .then(res => {
-                    if (res.ok) return res.json();
-                    throw new Error("Load state failed");
-                })
-                .then(imported => {
-                    if (imported && imported.lastUpdatedTime && (!state.lastUpdatedTime || imported.lastUpdatedTime > state.lastUpdatedTime)) {
-                        console.log("Real-time sync: Received newer state from server. Updating...");
-                        state = { ...state, ...imported };
-                        saveState();
+            if (!isCloudEnabled()) return;
 
-                        if (state.currentView === "dashboard") {
-                            renderDashboard();
-                        } else if (state.currentView === "schedule") {
-                            renderWeeklySchedule();
-                        } else if (state.currentView === "goals") {
-                            renderGoals();
-                        } else if (state.currentView === "document" && state.activeDocumentId) {
-                            loadDocumentEditor(state.activeDocumentId);
-                            renderSidebarDocuments();
-                        }
+            loadFromCloud(imported => {
+                if (!imported) return;
+                if (imported.lastUpdatedTime && state.lastUpdatedTime && imported.lastUpdatedTime > state.lastUpdatedTime) {
+                    console.log("Cloud real-time sync: Newer state detected. Merging...");
+                    const oldCustomCovers = state.customCovers || {};
+                    state = { ...state, ...imported, customCovers: oldCustomCovers };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+                    updateCloudSyncStatus('synced');
+
+                    if (state.currentView === "dashboard") {
+                        renderDashboard();
+                    } else if (state.currentView === "schedule") {
+                        renderWeeklySchedule();
+                    } else if (state.currentView === "goals") {
+                        renderGoals();
+                    } else if (state.currentView === "document" && state.activeDocumentId) {
+                        loadDocumentEditor(state.activeDocumentId);
+                        renderSidebarDocuments();
                     }
-                })
-                .catch(err => console.log("State polling sync skipped: " + err.message));
-        }, 8000);
+                }
+            });
+        }, 30000); // poll every 30s
     }
 
     function initWorkspaceApp() {
-        // Load initial state from server on startup
-        fetch("/api/load-state")
-            .then(res => {
-                if (res.ok) return res.json();
-                throw new Error("Server state not available");
-            })
-            .then(imported => {
-                if (imported && imported.schedule) {
-                    console.log("Initial state loaded from server.");
-                    state = { ...state, ...imported };
-                    saveState();
-                } else {
-                    loadState();
-                }
-                completeInit();
-            })
-            .catch(err => {
-                console.log("Using local storage state. " + err.message);
-                loadState();
-                completeInit();
-            });
+        // First load from localStorage for instant render
+        loadState();
+
+        // Then try to load from cloud (if configured) for cross-device sync
+        loadFromCloud(cloudData => {
+            if (cloudData && cloudData.lastUpdatedTime && cloudData.lastUpdatedTime > (state.lastUpdatedTime || 0)) {
+                console.log("Cloud state is newer. Merging from cloud...");
+                const covers = state.customCovers || {};
+                state = { ...state, ...cloudData, customCovers: covers };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                validateHabitsStreak();
+            }
+            completeInit();
+        });
 
         function completeInit() {
             initNavigation();
@@ -1642,6 +1749,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             initEventEditModal();
             initDocumentControls();
             initSettings();
+            initCloudSyncSettings();
 
             // Bind doc search box input
             const searchInput = document.getElementById("doc-search-input");
@@ -1656,6 +1764,15 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
 
             startRealtimeSyncTimer();
             startServerSyncPolling();
+
+            // Update cloud status badge on startup
+            setTimeout(() => {
+                if (isCloudEnabled()) {
+                    updateCloudSyncStatus('synced');
+                } else {
+                    updateCloudSyncStatus('offline');
+                }
+            }, 500);
 
             window.addEventListener('storage', (e) => {
                 if (e.key === STORAGE_KEY) {
@@ -1682,6 +1799,72 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         }
     }
 
+    function initCloudSyncSettings() {
+        const connectBtn = document.getElementById('cloud-connect-btn');
+        const disconnectBtn = document.getElementById('cloud-disconnect-btn');
+        const apiKeyInput = document.getElementById('cloud-api-key-input');
+        const binIdInput = document.getElementById('cloud-bin-id-input');
+        const createBinBtn = document.getElementById('cloud-create-bin-btn');
+        const cloudSyncNowBtn = document.getElementById('cloud-sync-now-btn');
+
+        if (!connectBtn) return;
+
+        // Populate saved values
+        const cfg = getCloudConfig();
+        if (apiKeyInput && cfg.apiKey) apiKeyInput.value = cfg.apiKey;
+        if (binIdInput && cfg.binId) binIdInput.value = cfg.binId;
+        updateCloudSyncStatus(isCloudEnabled() ? 'synced' : 'offline');
+
+        // Create new bin button
+        if (createBinBtn) {
+            createBinBtn.addEventListener('click', () => {
+                const key = apiKeyInput ? apiKeyInput.value.trim() : '';
+                if (!key) { alert('Please enter your JSONBin API key first.'); return; }
+                createBinBtn.textContent = 'Creating...';
+                createBinBtn.disabled = true;
+                createCloudBin(key, (err, binId) => {
+                    createBinBtn.textContent = '✨ Create New Bin';
+                    createBinBtn.disabled = false;
+                    if (err) { alert('Error: ' + err); return; }
+                    if (binIdInput) binIdInput.value = binId;
+                    alert(`✅ Bin created! ID: ${binId}\nNow click "Connect & Sync" to activate.`);
+                });
+            });
+        }
+
+        // Connect button
+        connectBtn.addEventListener('click', () => {
+            const key = apiKeyInput ? apiKeyInput.value.trim() : '';
+            const bin = binIdInput ? binIdInput.value.trim() : '';
+            if (!key || !bin) { alert('Please enter both your API Key and Bin ID.'); return; }
+            setCloudConfig(key, bin);
+            updateCloudSyncStatus('syncing');
+            syncToCloud();
+            setTimeout(() => updateCloudSyncStatus('synced'), 3000);
+            alert('☁️ Cloud sync connected! Your data will now sync across all devices.');
+        });
+
+        // Disconnect button
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                if (!confirm('Disconnect cloud sync? Your local data will remain.')) return;
+                localStorage.removeItem(CLOUD_KEY);
+                if (apiKeyInput) apiKeyInput.value = '';
+                if (binIdInput) binIdInput.value = '';
+                updateCloudSyncStatus('offline');
+            });
+        }
+
+        // Manual sync now
+        if (cloudSyncNowBtn) {
+            cloudSyncNowBtn.addEventListener('click', () => {
+                if (!isCloudEnabled()) { alert('Cloud sync not configured. Please connect first.'); return; }
+                updateCloudSyncStatus('syncing');
+                syncToCloud();
+            });
+        }
+    }
+
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initWorkspaceApp);
     } else {
@@ -1693,11 +1876,8 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
     // ==========================================================================
 
     function syncStateToServer() {
-        fetch("/api/save-state", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(state)
-        }).catch(err => console.log("Failed to sync state to server", err));
+        // No-op: server sync replaced by cloud sync (JSONBin)
+        // Cloud sync is handled by scheduledCloudSync() called from saveState()
     }
 
     function startRealtimeSyncTimer() {
@@ -1750,3 +1930,32 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             }
         }
     }
+    // Socket.io Real-time Updates (Past, Present, Future)
+const socket = io();
+
+socket.on('workUpdate', (data) => {
+    const now = new Date().getTime();
+    
+    if (data.tasks) {
+        data.tasks = data.tasks.map(task => {
+            const taskTime = new Date(task.dueDate).getTime();
+            task.status = taskTime < now ? 'past' : 
+                         taskTime === now ? 'present' : 'future';
+            return task;
+        });
+    }
+    
+    console.log('Real-time update received:', data);
+    // Re-render current view
+    if (state.currentView === "dashboard") {
+        renderDashboard();
+    } else if (state.currentView === "schedule") {
+        renderWeeklySchedule();
+    } else if (state.currentView === "goals") {
+        renderGoals();
+    }
+});
+
+socket.on('initialState', (state) => {
+    console.log('Initial state loaded via Socket.io');
+});

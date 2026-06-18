@@ -11,6 +11,7 @@
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
 </head>
 <body class="font-sans">
     
@@ -115,6 +116,7 @@
                 <div class="live-datetime-badge" id="live-datetime-badge">
                     <span class="live-dot"></span>
                     <span class="live-datetime-text" id="live-datetime-text">Initializing real-time clock...</span>
+                    <span class="cloud-status-badge cloud-status-offline" id="cloud-sync-status">💾 Local only</span>
                 </div>
                 <h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">Weekly Study Schedule</h1>
                 <p class="page-description" id="page-description">Welcome back! Manage your hourly targets, log your learning progress, and customize your timetable.</p>
@@ -355,6 +357,52 @@
 
 
 
+
+                    <div class="settings-card cloud-sync-card">
+                        <h3>☁️ Cloud Sync &amp; Real-Time Tracking</h3>
+                        <p class="settings-desc">Connect to a free <strong>JSONBin.io</strong> cloud database to sync your streaks, goals, and habits across all devices — even on Vercel. Your data persists day by day in the cloud.</p>
+
+                        <div class="cloud-setup-steps">
+                            <div class="cloud-step">
+                                <span class="step-num">1</span>
+                                <div class="step-content">
+                                    <strong>Get a free API Key</strong>
+                                    <span>Sign up at <a href="https://jsonbin.io" target="_blank" class="settings-link">jsonbin.io</a> → go to API Keys → copy your Master Key</span>
+                                </div>
+                            </div>
+                            <div class="cloud-step">
+                                <span class="step-num">2</span>
+                                <div class="step-content">
+                                    <strong>Paste your API Key below &amp; create a Bin</strong>
+                                    <span>The bin stores all your workspace data in the cloud.</span>
+                                </div>
+                            </div>
+                            <div class="cloud-step">
+                                <span class="step-num">3</span>
+                                <div class="step-content">
+                                    <strong>Click Connect — done!</strong>
+                                    <span>Data auto-syncs every time you make a change.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label for="cloud-api-key-input">JSONBin Master API Key</label>
+                            <input type="password" id="cloud-api-key-input" placeholder="$2a$10$...(your key)" spellcheck="false" style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
+                        </div>
+
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label for="cloud-bin-id-input">Bin ID <span style="opacity:0.6;font-weight:400;">(auto-filled after creating)</span></label>
+                            <input type="text" id="cloud-bin-id-input" placeholder="e.g. 686b3f2facd3cb34a8a2b9d1" spellcheck="false" style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
+                        </div>
+
+                        <div class="button-row" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+                            <button class="btn secondary" id="cloud-create-bin-btn"><i data-lucide="plus-circle"></i> ✨ Create New Bin</button>
+                            <button class="btn primary" id="cloud-connect-btn"><i data-lucide="cloud"></i> Connect &amp; Sync</button>
+                            <button class="btn secondary" id="cloud-sync-now-btn"><i data-lucide="refresh-cw"></i> Sync Now</button>
+                            <button class="btn danger" id="cloud-disconnect-btn"><i data-lucide="cloud-off"></i> Disconnect</button>
+                        </div>
+                    </div>
 
                     <div class="settings-card">
                         <h3>Notion Help Guides</h3>
