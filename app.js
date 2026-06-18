@@ -170,14 +170,22 @@ const STORAGE_KEY = "personal_notion_workspace_state";
 const CLOUD_KEY = "notion_cloud_config"; // stores { apiKey, binId } in localStorage
 
 // ==========================================================================
-// Cloud Sync (JSONBin.io) — Free real-time cross-device tracking
+// Cloud Sync (JSONBin.io) — Real-time cross-device tracking (pre-configured)
 // ==========================================================================
+
+// Built-in API key — cloud sync works automatically on first launch
+const DEFAULT_API_KEY = "$2a$10$DFOntZXjFqfAcXtaGW.B/uWAYuMn0ZeBN39WJwHfp24dLPdHZbFNe";
 
 function getCloudConfig() {
     try {
         const raw = localStorage.getItem(CLOUD_KEY);
-        return raw ? JSON.parse(raw) : { apiKey: '', binId: '' };
-    } catch (e) { return { apiKey: '', binId: '' }; }
+        const saved = raw ? JSON.parse(raw) : {};
+        // Always use the built-in key if none saved
+        return {
+            apiKey: saved.apiKey || DEFAULT_API_KEY,
+            binId: saved.binId || ''
+        };
+    } catch (e) { return { apiKey: DEFAULT_API_KEY, binId: '' }; }
 }
 
 function setCloudConfig(apiKey, binId) {
@@ -186,7 +194,26 @@ function setCloudConfig(apiKey, binId) {
 
 function isCloudEnabled() {
     const cfg = getCloudConfig();
-    return cfg.apiKey && cfg.binId;
+    return !!(cfg.apiKey && cfg.binId);
+}
+
+// Auto-setup: create a bin on first launch if API key is present but no bin ID
+function autoSetupCloud(callback) {
+    const cfg = getCloudConfig();
+    if (cfg.binId) { if (callback) callback(); return; } // already set up
+    if (!cfg.apiKey) { if (callback) callback(); return; }
+
+    console.log("Auto-creating JSONBin for cloud sync...");
+    createCloudBin(cfg.apiKey, (err, binId) => {
+        if (!err && binId) {
+            setCloudConfig(cfg.apiKey, binId);
+            console.log("✅ Cloud sync auto-configured! Bin ID:", binId);
+            updateCloudSyncStatus('synced');
+        } else {
+            console.warn("Cloud auto-setup failed:", err);
+        }
+        if (callback) callback();
+    });
 }
 
 // Push state to JSONBin cloud
@@ -1724,16 +1751,19 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         // First load from localStorage for instant render
         loadState();
 
-        // Then try to load from cloud (if configured) for cross-device sync
-        loadFromCloud(cloudData => {
-            if (cloudData && cloudData.lastUpdatedTime && cloudData.lastUpdatedTime > (state.lastUpdatedTime || 0)) {
-                console.log("Cloud state is newer. Merging from cloud...");
-                const covers = state.customCovers || {};
-                state = { ...state, ...cloudData, customCovers: covers };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                validateHabitsStreak();
-            }
-            completeInit();
+        // Auto-setup cloud on first launch (creates JSONBin if not configured)
+        // Then load from cloud if newer data exists
+        autoSetupCloud(() => {
+            loadFromCloud(cloudData => {
+                if (cloudData && cloudData.lastUpdatedTime && cloudData.lastUpdatedTime > (state.lastUpdatedTime || 0)) {
+                    console.log("Cloud state is newer. Merging from cloud...");
+                    const covers = state.customCovers || {};
+                    state = { ...state, ...cloudData, customCovers: covers };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                    validateHabitsStreak();
+                }
+                completeInit();
+            });
         });
 
         function completeInit() {
