@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Notion Workspace</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans">
+    
+    <!-- Workspace Layout -->
+    <div class="workspace-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <span class="avatar">⚡</span>
+                    <div class="profile-info">
+                        <span class="user-name">Study Workspace</span>
+                        <span class="user-role">Personal Workspace</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Collapse sidebar">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-section-header">Favorites</div>
+                    <ul class="menu-list">
+                        <li class="menu-item active" data-view="dashboard">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span>Dashboard</span>
+                        </li>
+                        <li class="menu-item" data-view="schedule">
+                            <i data-lucide="calendar"></i>
+                            <span>Weekly Schedule</span>
+                        </li>
+                        <li class="menu-item" data-view="goals">
+                            <i data-lucide="target"></i>
+                            <span>Goals & Analytics</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-section-header-row">
+                        <span class="menu-section-header">Private Pages</span>
+                        <button class="add-doc-btn" id="sidebar-add-doc" title="Create a new document">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar-search-box">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" id="doc-search-input" placeholder="Search pages..." spellcheck="false">
+                    </div>
+                    <ul class="menu-list" id="documents-list">
+                        <!-- Dynamic document links will be rendered here -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="footer-btn" id="theme-toggle" title="Toggle Dark/Light Mode">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                    <span id="theme-text">Dark Mode</span>
+                </button>
+                <button class="footer-btn" id="open-settings" data-view="settings">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Viewport -->
+        <main class="main-content">
+            <!-- Decorative Header Cover -->
+            <div class="workspace-cover" id="workspace-cover">
+                <div class="cover-gradient"></div>
+                <button class="change-cover-btn" id="change-cover">
+                    <i data-lucide="image"></i> Change Cover
+                </button>
+                <input type="file" id="cover-file-input" style="display: none;" accept="image/*">
+            </div>
+
+            <!-- Page Meta Info -->
+            <div class="page-meta-container">
+                <div class="page-emoji-container">
+                    <button class="page-emoji-btn" id="page-emoji-btn">📅</button>
+                    <!-- Simple Emoji Picker Popup -->
+                    <div class="emoji-picker" id="emoji-picker">
+                        <span class="emoji-option">📅</span>
+                        <span class="emoji-option">⚡</span>
+                        <span class="emoji-option">🎓</span>
+                        <span class="emoji-option">🐍</span>
+                        <span class="emoji-option">💻</span>
+                        <span class="emoji-option">📈</span>
+                        <span class="emoji-option">🎨</span>
+                        <span class="emoji-option">📝</span>
+                        <span class="emoji-option">☕</span>
+                        <span class="emoji-option">💡</span>
+                        <span class="emoji-option">🎯</span>
+                        <span class="emoji-option">🛠️</span>
+                    </div>
+                </div>
+                <!-- Real-time Live Clock & Date badge -->
+                <div class="live-datetime-badge" id="live-datetime-badge">
+                    <span class="live-dot"></span>
+                    <span class="live-datetime-text" id="live-datetime-text">Initializing real-time clock...</span>
+                </div>
+                <h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">Weekly Study Schedule</h1>
+                <p class="page-description" id="page-description">Welcome back! Manage your hourly targets, log your learning progress, and customize your timetable.</p>
+            </div>
+
+            <!-- Views Container -->
+            <div class="views-wrapper">
+                
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="dashboard-view" class="view-panel active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span>Study Completed</span>
+                                <i data-lucide="clock" class="text-blue"></i>
+                            </div>
+                            <div class="stat-value" id="stat-study-hours">0h / 36h</div>
+                            <div class="stat-progress-bar">
+                                <div class="stat-progress-fill bg-blue" id="stat-study-progress" style="width: 0%"></div>
+                            </div>
+                            <div class="stat-footer">Target: 36 hrs/week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span>Checklist Progress</span>
+                                <i data-lucide="check-square" class="text-green"></i>
+                            </div>
+                            <div class="stat-value" id="stat-checklist-percent">0%</div>
+                            <div class="stat-progress-bar">
+                                <div class="stat-progress-fill bg-green" id="stat-checklist-progress" style="width: 0%"></div>
+                            </div>
+                            <div class="stat-footer" id="stat-checklist-summary">0 of 0 tasks completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span>Current Session</span>
+                                <i data-lucide="play" class="text-purple"></i>
+                            </div>
+                            <div class="stat-value" id="stat-timer-display">25:00</div>
+                            <div class="stat-progress-bar">
+                                <div class="stat-progress-fill bg-purple" id="stat-timer-progress" style="width: 100%"></div>
+                            </div>
+                            <div class="stat-footer" id="stat-timer-state">Pomodoro Timer: Idle</div>
+                        </div>
+                    </div>
+
+                    <!-- Widgets Row -->
+                    <div class="widgets-row">
+                        <!-- Daily Checklist Widget -->
+                        <div class="widget-card checklist-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="check-square"></i> Daily Checklist</h3>
+                                <button class="widget-action-btn" id="reset-checklist" title="Reset checklist">
+                                    <i data-lucide="rotate-ccw"></i>
+                                </button>
+                            </div>
+                            <div class="widget-content">
+                                <div class="checklist-items" id="checklist-items-container">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                                <div class="add-task-form">
+                                    <input type="text" id="new-task-input" placeholder="Add custom item..." spellcheck="false">
+                                    <button id="add-task-btn"><i data-lucide="plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pomodoro Timer Widget -->
+                        <div class="widget-card timer-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="timer"></i> Focus Timer</h3>
+                                <div class="timer-modes">
+                                    <button class="timer-mode-btn active" data-time="1500" data-mode="pomodoro">Focus</button>
+                                    <button class="timer-mode-btn" data-time="300" data-mode="short">Short Break</button>
+                                    <button class="timer-mode-btn" data-time="900" data-mode="long">Long Break</button>
+                                </div>
+                            </div>
+                            <div class="widget-content timer-center">
+                                <div class="timer-circle-container">
+                                    <svg class="timer-svg" viewBox="0 0 100 100">
+                                        <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+                                        <circle class="timer-circle-fill" id="timer-progress-ring" cx="50" cy="50" r="45"></circle>
+                                    </svg>
+                                    <div class="timer-time" id="timer-clock">25:00</div>
+                                </div>
+                                <div class="timer-controls">
+                                    <button class="timer-ctrl-btn" id="timer-toggle-btn" title="Start Session">
+                                        <i data-lucide="play" id="timer-toggle-icon"></i>
+                                    </button>
+                                    <button class="timer-ctrl-btn secondary" id="timer-reset-btn" title="Reset Timer">
+                                        <i data-lucide="rotate-ccw"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Habit / Mini Logger Widget -->
+                        <div class="widget-card habit-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="sparkles"></i> Habit Rings</h3>
+                            </div>
+                            <div class="widget-content habits-list">
+                                <div class="habit-row">
+                                    <div class="habit-info">
+                                        <span class="habit-name">Hydration (3L)</span>
+                                        <span class="habit-streak" id="streak-water">0 days</span>
+                                    </div>
+                                    <button class="habit-circle-btn" id="habit-water"><i data-lucide="droplet"></i></button>
+                                </div>
+                                <div class="habit-row">
+                                    <div class="habit-info">
+                                        <span class="habit-name">Daily Exercise</span>
+                                        <span class="habit-streak" id="streak-exercise">0 days</span>
+                                    </div>
+                                    <button class="habit-circle-btn" id="habit-exercise"><i data-lucide="activity"></i></button>
+                                </div>
+                                <div class="habit-row">
+                                    <div class="habit-info">
+                                        <span class="habit-name">LeetCode Practice</span>
+                                        <span class="habit-streak" id="streak-code">0 days</span>
+                                    </div>
+                                    <button class="habit-circle-btn" id="habit-code"><i data-lucide="terminal"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements & Badges Row -->
+                    <div class="achievements-row" id="dashboard-achievements-row">
+                        <div class="widget-card badge-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="award"></i> Achievements & Badges</h3>
+                                <div class="streak-badge" id="dashboard-streak-badge">🔥 0 Day Streak</div>
+                            </div>
+                            <div class="widget-content">
+                                <div class="badges-grid" id="badges-container">
+                                    <!-- Dynamic Achievements list -->
+                                </div>
+                                <div class="weekly-grid-tracker">
+                                    <span class="tracker-label">Weekly Study Activity:</span>
+                                    <div class="days-indicator-row" id="weekly-activity-grid">
+                                        <!-- Dynamic circles Mon-Sun -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- 2. WEEKLY PLANNER VIEW -->
+                <section id="schedule-view" class="view-panel">
+                    <div class="view-header-actions" style="justify-content: flex-end; margin-bottom: 16px;">
+                        <div class="button-group">
+                            <button class="btn secondary" id="reset-schedule-btn"><i data-lucide="rotate-ccw"></i> Reset to Default</button>
+                        </div>
+                    </div>
+                    <div class="schedule-table-wrapper">
+                        <table class="schedule-table" id="planner-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                    <th>Sunday</th>
+                                </tr>
+                            </thead>
+                            <tbody id="planner-table-body">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 3. GOALS & ANALYTICS VIEW -->
+                <section id="goals-view" class="view-panel">
+                    
+
+                    <div class="goals-grid" id="goals-container">
+                        <!-- Dynamically filled with subject goal cards -->
+                    </div>
+                </section>
+
+                <!-- 4. DYNAMIC DOCUMENT VIEW -->
+                <section id="docs-view" class="view-panel">
+                    <div class="doc-editor-wrapper">
+                        <div class="doc-editor-header">
+                            <div class="doc-meta">
+                                <button class="doc-emoji-btn" id="doc-emoji-btn">📝</button>
+                                <input type="text" class="doc-title-input" id="doc-title-input" placeholder="Untitled Note" spellcheck="false">
+                            </div>
+                            <div class="doc-editor-actions" style="display: flex; gap: 8px; align-items: center;">
+                                <div class="doc-mode-toggle" style="display: flex; background: var(--bg-card-hover); padding: 2px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
+                                    <button class="doc-mode-btn active" id="doc-edit-mode-btn" title="Edit Mode" style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-primary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Edit</button>
+                                    <button class="doc-mode-btn" id="doc-preview-mode-btn" title="Preview Mode" style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i data-lucide="eye" style="width: 12px; height: 12px;"></i> Preview</button>
+                                </div>
+                                <button class="btn danger" id="delete-doc-btn" title="Delete note" style="padding: 6px 12px; font-size: 0.75rem; font-weight: 500;"><i data-lucide="trash-2"></i> Delete Note</button>
+                            </div>
+                        </div>
+                        <div class="doc-editor-body">
+                            <textarea class="doc-textarea" id="doc-textarea" placeholder="Start typing here... Use markdown or plain text to structure your thoughts." spellcheck="false"></textarea>
+                            <div class="doc-preview-area markdown-body" id="doc-preview-area" style="display: none; width: 100%; min-height: 400px; padding: 10px 0; overflow-y: auto; color: var(--text-primary); font-family: var(--font-family);"></div>
+                        </div>
+                        <div class="doc-editor-footer">
+                            <span class="doc-autosave-status"><i data-lucide="check"></i> Auto-saved in local storage</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SETTINGS VIEW -->
+                <section id="settings-view" class="view-panel">
+                    
+
+                    <div class="settings-card">
+                        <h3>Typography & Font</h3>
+                        <div class="font-selector">
+                            <button class="btn text-btn font-option active" data-font="font-sans">Outfit (Sans)</button>
+                            <button class="btn text-btn font-option" data-font="font-serif">Playfair (Serif)</button>
+                            <button class="btn text-btn font-option" data-font="font-mono">Fira Code (Mono)</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Accent Theme Color</h3>
+                        <div class="accent-selector">
+                            <button class="accent-dot bg-blue active" data-accent="blue" title="Notion Blue"></button>
+                            <button class="accent-dot bg-purple" data-accent="purple" title="Cozy Purple"></button>
+                            <button class="accent-dot bg-green" data-accent="green" title="Forest Green"></button>
+                            <button class="accent-dot bg-orange" data-accent="orange" title="Sunset Orange"></button>
+                        </div>
+                    </div>
+
+
+
+
+
+                    <div class="settings-card">
+                        <h3>Notion Help Guides</h3>
+                        <p class="settings-desc">Recreate or reset the default Notion-style workspace help and resources pages.</p>
+                        <div class="button-row">
+                            <button class="btn primary" id="recreate-guides-btn"><i data-lucide="help-circle"></i> Restore Default Guides</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Backup & Data Management</h3>
+                        <p class="settings-desc">Download a local JSON backup of your planner schedule, goals, checklist, and custom notes.</p>
+                        <div class="button-row">
+                            <button class="btn primary" id="export-data-btn"><i data-lucide="download"></i> Export Workspace Data</button>
+                            <button class="btn secondary" id="import-data-trigger"><i data-lucide="upload"></i> Import Workspace Data</button>
+                            <input type="file" id="import-data-file" style="display:none;" accept=".json">
+                            <button class="btn danger" id="clear-all-data-btn"><i data-lucide="trash-2"></i> Factory Reset Data</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- 1. Edit Schedule Event Modal -->
+    <div class="modal-overlay" id="edit-event-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Edit Schedule Block</h3>
+                <button class="modal-close-btn" id="close-event-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Time & Day</label>
+                    <div id="modal-event-details" class="event-details-label">Monday 7:00 AM</div>
+                </div>
+                <div class="form-group">
+                    <label for="event-title">Activity Title</label>
+                    <input type="text" id="event-title" placeholder="e.g. Python study, Web development" spellcheck="false">
+                </div>
+                <div class="form-group">
+                    <label>Subject / Category</label>
+                    <div class="category-selector" id="modal-category-select">
+                        <button class="category-option" data-category="python" data-color="green">Python & AI</button>
+                        <button class="category-option" data-category="dsa" data-color="blue">DSA</button>
+                        <button class="category-option" data-category="web" data-color="teal">Web Dev</button>
+                        <button class="category-option" data-category="app" data-color="purple">App Dev</button>
+                        <button class="category-option" data-category="design" data-color="orange">Design/Edit</button>
+                        <button class="category-option" data-category="break" data-color="slate">Break/Rest</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="cancel-event-save">Cancel</button>
+                <button class="btn primary" id="save-event-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <audio id="timer-bell" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav" preload="auto"></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>

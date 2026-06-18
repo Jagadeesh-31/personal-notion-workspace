@@ -1,0 +1,13 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Local state (don't upload your personal data to GitHub!)
+state.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel

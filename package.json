@@ -1,0 +1,13 @@
+{
+  "name": "personal-notion-workspace",
+  "version": "1.0.0",
+  "description": "Personal Notion-style Study Workspace with streaks, habits, goals, and weekly planner",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["productivity", "notion", "study-planner", "habits", "streaks"],
+  "author": "Personal Workspace",
+  "license": "MIT"
+}
