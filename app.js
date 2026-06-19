@@ -382,9 +382,9 @@ function validateHabitsStreak() {
     }
 }
 
-// Navigation History Stacks
-let historyStack = [];
-let forwardStack = [];
+// Navigation History Variables
+let historyIndex = 0;
+let historyLength = 0;
 let isNavigatingHistory = false;
 
 function initNavigation() {
@@ -409,27 +409,13 @@ function initNavigation() {
 
     if (backBtn) {
         backBtn.addEventListener("click", () => {
-            if (historyStack.length > 0) {
-                const prev = historyStack.pop();
-                const current = { view: state.currentView, docId: state.activeDocumentId };
-                forwardStack.push(current);
-                isNavigatingHistory = true;
-                switchView(prev.view, prev.docId);
-                isNavigatingHistory = false;
-            }
+            window.history.back();
         });
     }
 
     if (forwardBtn) {
         forwardBtn.addEventListener("click", () => {
-            if (forwardStack.length > 0) {
-                const next = forwardStack.pop();
-                const current = { view: state.currentView, docId: state.activeDocumentId };
-                historyStack.push(current);
-                isNavigatingHistory = true;
-                switchView(next.view, next.docId);
-                isNavigatingHistory = false;
-            }
+            window.history.forward();
         });
     }
 
@@ -480,8 +466,8 @@ function updateThemeUI() {
 function updateNavigationButtons() {
     const backBtn = document.getElementById("nav-back-btn");
     const forwardBtn = document.getElementById("nav-forward-btn");
-    if (backBtn) backBtn.disabled = historyStack.length === 0;
-    if (forwardBtn) forwardBtn.disabled = forwardStack.length === 0;
+    if (backBtn) backBtn.disabled = historyIndex <= 0;
+    if (forwardBtn) forwardBtn.disabled = historyIndex >= historyLength;
 
     const breadcrumbCurrent = document.getElementById("breadcrumb-current");
     const breadcrumbParent = document.getElementById("breadcrumb-parent");
@@ -503,13 +489,47 @@ function updateNavigationButtons() {
     }
 }
 
-function switchView(viewName, docId = null) {
-    if (!isNavigatingHistory) {
+function initRouting() {
+    // Read current hash from URL on startup
+    const hash = window.location.hash;
+    let targetView = "dashboard";
+    let targetDocId = null;
+
+    if (hash) {
+        if (hash.startsWith("#doc-")) {
+            targetView = "document";
+            targetDocId = hash.replace("#doc-", "");
+        } else if (["#dashboard", "#schedule", "#goals", "#settings"].includes(hash)) {
+            targetView = hash.replace("#", "");
+        }
+    }
+
+    // Set initial state
+    history.replaceState({ viewName: targetView, docId: targetDocId, index: 0 }, "", hash || `#${targetView}`);
+    historyIndex = 0;
+    historyLength = 0;
+
+    // Load initial view
+    switchView(targetView, targetDocId, true);
+
+    // Listen to popstate event (e.g. browser back/forward, phone swipe back)
+    window.addEventListener("popstate", (e) => {
+        if (e.state && e.state.viewName) {
+            historyIndex = e.state.index || 0;
+            switchView(e.state.viewName, e.state.docId, true);
+        }
+    });
+}
+
+function switchView(viewName, docId = null, isHistoryNav = false) {
+    if (!isHistoryNav) {
         const currentView = state.currentView;
         const currentDocId = state.activeDocumentId;
         if (currentView !== viewName || currentDocId !== docId) {
-            historyStack.push({ view: currentView, docId: currentDocId });
-            forwardStack = []; // clear forward stack
+            historyIndex++;
+            historyLength = historyIndex;
+            const hash = viewName === 'document' ? `#doc-${docId}` : `#${viewName}`;
+            history.pushState({ viewName, docId, index: historyIndex }, "", hash);
         }
     }
 
@@ -1864,7 +1884,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             }
 
             renderSidebarDocuments();
-            switchView("dashboard");
+            initRouting();
 
             startRealtimeSyncTimer();
             startServerSyncPolling();
