@@ -385,7 +385,6 @@ function validateHabitsStreak() {
 // Navigation History Variables
 let historyIndex = 0;
 let historyLength = 0;
-let isNavigatingHistory = false;
 
 function initNavigation() {
     // Sidebar toggle (collapse / expand)
@@ -403,19 +402,19 @@ function initNavigation() {
         safeCreateIcons();
     });
 
-    // History Back/Forward button handlers
-    const backBtn = document.getElementById("nav-back-btn");
-    const forwardBtn = document.getElementById("nav-forward-btn");
+    // Start / End topbar button handlers
+    const startBtn = document.getElementById("nav-start-btn");
+    const endBtn = document.getElementById("nav-end-btn");
 
-    if (backBtn) {
-        backBtn.addEventListener("click", () => {
-            window.history.back();
+    if (startBtn) {
+        startBtn.addEventListener("click", () => {
+            switchView("dashboard");
         });
     }
 
-    if (forwardBtn) {
-        forwardBtn.addEventListener("click", () => {
-            window.history.forward();
+    if (endBtn) {
+        endBtn.addEventListener("click", () => {
+            switchView("settings");
         });
     }
 
@@ -463,12 +462,7 @@ function updateThemeUI() {
     safeCreateIcons();
 }
 
-function updateNavigationButtons() {
-    const backBtn = document.getElementById("nav-back-btn");
-    const forwardBtn = document.getElementById("nav-forward-btn");
-    if (backBtn) backBtn.disabled = historyIndex <= 0;
-    if (forwardBtn) forwardBtn.disabled = historyIndex >= historyLength;
-
+function updateBreadcrumbs() {
     const breadcrumbCurrent = document.getElementById("breadcrumb-current");
     const breadcrumbParent = document.getElementById("breadcrumb-parent");
     if (breadcrumbCurrent && breadcrumbParent) {
@@ -577,7 +571,7 @@ function switchView(viewName, docId = null, isHistoryNav = false) {
     }
 
     // Update breadcrumbs and history buttons
-    updateNavigationButtons();
+    updateBreadcrumbs();
 }
 
 function applyCoverStyle(coverKey, defaultKey = "dashboard") {

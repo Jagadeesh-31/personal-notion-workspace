@@ -2433,33 +2433,38 @@ input:checked + .slider:before {
 }
 
 .nav-btn {
-    background: transparent;
-    border: none;
+    background: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
-    width: 28px;
     height: 28px;
     border-radius: 6px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 0;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
-.nav-btn:hover:not(:disabled) {
-    background: var(--bg-card-hover);
-}
-
-.nav-btn:disabled {
-    color: var(--text-muted);
-    opacity: 0.4;
-    cursor: not-allowed;
+.nav-btn:hover {
+    background: var(--bg-card);
+    border-color: var(--text-muted);
 }
 
 .nav-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
+}
+
+@media (max-width: 480px) {
+    .nav-btn-text {
+        display: none;
+    }
+    .nav-btn {
+        padding: 0 8px;
+    }
 }
 
 .workspace-breadcrumbs {
