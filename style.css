@@ -2808,3 +2808,251 @@ input:checked + .slider:before {
     display: none;
 }
 
+/* ==========================================================================
+   Task Completion Analytics & Visualizations Widget
+   ========================================================================== */
+.visualizations-row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.viz-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1.2fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+@media (max-width: 900px) {
+    .viz-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.viz-card {
+    background: rgba(var(--accent-rgb), 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 200px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.viz-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(var(--accent-rgb), 0.3);
+}
+
+.viz-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.03em;
+    margin-bottom: 12px;
+    align-self: flex-start;
+}
+
+.viz-footer-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+/* 1. Radial Gauge Styles */
+.radial-gauge-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radial-svg {
+    width: 100px;
+    height: 100px;
+    transform: rotate(-90deg);
+}
+
+.radial-circle-bg {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 8;
+}
+
+.radial-circle-fill {
+    fill: none;
+    stroke: var(--accent-color);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: 251.2;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radial-center-text {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.radial-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.radial-desc {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: -2px;
+}
+
+/* 2. Weekly Bar Chart Styles */
+.bar-chart-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    height: 110px;
+    padding: 0 4px;
+}
+
+.chart-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.chart-bar-fill {
+    width: 12px;
+    height: 0%; /* Dynamic */
+    background: linear-gradient(180deg, var(--accent-color) 0%, rgba(var(--accent-rgb), 0.25) 100%);
+    border-radius: 6px;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.15);
+}
+
+.chart-bar-fill:hover {
+    background: var(--accent-color);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
+}
+
+.chart-bar-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 10;
+}
+
+.chart-bar-fill:hover .chart-bar-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}
+
+.chart-bar-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* 3. Summary Stats Stack */
+.summary-stats-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.summary-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-workspace);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    transition: border-color 0.2s;
+}
+
+.summary-stat-item:hover {
+    border-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.summary-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-stat-icon i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Dimmed accent backgrounds for icons */
+.bg-green-dim {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.bg-blue-dim {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.bg-purple-dim {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.summary-stat-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-stat-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.summary-stat-label {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+

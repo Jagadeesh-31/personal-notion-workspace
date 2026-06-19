@@ -1005,6 +1005,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         saveState();
         updateDashboardStats();
         renderAchievements();
+        renderTaskVisualizations();
     }
 
     function addCustomTask(text) {
@@ -1020,6 +1021,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         saveState();
         renderDailyChecklist();
         updateDashboardStats();
+        renderTaskVisualizations();
     }
 
     function deleteCustomTask(taskId) {
@@ -1033,6 +1035,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         saveState();
         renderDailyChecklist();
         updateDashboardStats();
+        renderTaskVisualizations();
     }
 
     function resetTodayChecklist() {
@@ -1043,6 +1046,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         saveState();
         renderDailyChecklist();
         updateDashboardStats();
+        renderTaskVisualizations();
     }
 
     function renderDashboard() {
@@ -1050,6 +1054,139 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         renderDailyChecklist();
         renderHabits();
         renderAchievements();
+        renderTaskVisualizations();
+    }
+
+    function renderTaskVisualizations() {
+        const container = document.getElementById("dashboard-visualizations-row");
+        if (!container || state.currentView !== "dashboard") return;
+
+        // 1. Daily Progress (Today)
+        const checklist = getTodayChecklist();
+        const totalToday = checklist.length;
+        const completedToday = checklist.filter(t => t.checked).length;
+        const pctToday = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+
+        const pctText = document.getElementById("viz-daily-pct");
+        const fractionText = document.getElementById("viz-daily-fraction");
+        const ring = document.getElementById("viz-radial-ring");
+
+        if (pctText) pctText.textContent = `${pctToday}%`;
+        if (fractionText) fractionText.textContent = `${completedToday}/${totalToday}`;
+        if (ring) {
+            const offset = 251.2 - (251.2 * pctToday) / 100;
+            ring.style.strokeDashoffset = offset;
+        }
+
+        // 2. Weekly Bar Chart (Mon - Sun)
+        const chartContainer = document.getElementById("viz-weekly-chart");
+        if (chartContainer) {
+            chartContainer.innerHTML = "";
+            const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const datesForWeek = getDatesForWeek();
+
+            // Find maximum completions in any day of the week to scale the bars (min height scale is 5)
+            let maxCompletions = 5;
+            daysOfWeek.forEach(day => {
+                const dateStr = datesForWeek[day];
+                const dayTasks = state.checklistCheckedByDate ? (state.checklistCheckedByDate[dateStr] || {}) : {};
+                const completions = Object.values(dayTasks).filter(v => v === true).length;
+                if (completions > maxCompletions) maxCompletions = completions;
+            });
+
+            daysOfWeek.forEach(day => {
+                const dateStr = datesForWeek[day];
+                const dayTasks = state.checklistCheckedByDate ? (state.checklistCheckedByDate[dateStr] || {}) : {};
+                const completions = Object.values(dayTasks).filter(v => v === true).length;
+                const barPct = Math.round((completions / maxCompletions) * 100);
+
+                const barWrap = document.createElement("div");
+                barWrap.className = "chart-bar-wrap";
+
+                // Highlight today's column header
+                const todayStr = new Date().toDateString();
+                const isToday = dateStr === todayStr;
+
+                barWrap.innerHTML = `
+                    <div class="chart-bar-fill" style="height: ${barPct}%;">
+                        <div class="chart-bar-tooltip">${completions} task${completions === 1 ? '' : 's'}</div>
+                    </div>
+                    <span class="chart-bar-label" style="${isToday ? 'color: var(--accent-color); font-weight: 700;' : ''}">${day}</span>
+                `;
+                chartContainer.appendChild(barWrap);
+            });
+        }
+
+        // 3. Monthly and Lifetime Stats
+        const monthlyCountEl = document.getElementById("viz-monthly-count");
+        const lifetimeCountEl = document.getElementById("viz-lifetime-count");
+        const dailyAvgEl = document.getElementById("viz-daily-avg");
+
+        const monthlyCompletions = getMonthChecklistStats();
+        const lifetimeCompletions = getLifetimeChecklistStats();
+
+        // Calculate average completions per day the user completed at least 1 task
+        let uniqueDaysWithCompletions = 0;
+        if (state.checklistCheckedByDate) {
+            Object.values(state.checklistCheckedByDate).forEach(dayTasks => {
+                const completions = Object.values(dayTasks).filter(v => v === true).length;
+                if (completions > 0) uniqueDaysWithCompletions++;
+            });
+        }
+        const dailyAvg = uniqueDaysWithCompletions > 0 ? (lifetimeCompletions / uniqueDaysWithCompletions).toFixed(1) : "0.0";
+
+        if (monthlyCountEl) monthlyCountEl.textContent = monthlyCompletions;
+        if (lifetimeCountEl) lifetimeCountEl.textContent = lifetimeCompletions;
+        if (dailyAvgEl) dailyAvgEl.textContent = dailyAvg;
+
+        safeCreateIcons();
+    }
+
+    // Helper functions for task metrics
+    function getDatesForWeek() {
+        const today = new Date();
+        const currentDay = today.getDay(); // 0 is Sun, 1 is Mon, etc.
+        const mondayDiff = currentDay === 0 ? -6 : 1 - currentDay; // diff to get to Monday
+
+        const dates = {};
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + mondayDiff + i);
+            dates[days[i]] = d.toDateString();
+        }
+        return dates;
+    }
+
+    function getMonthChecklistStats() {
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
+        let totalCompleted = 0;
+
+        if (state.checklistCheckedByDate) {
+            Object.keys(state.checklistCheckedByDate).forEach(dateStr => {
+                const d = new Date(dateStr);
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    const dayTasks = state.checklistCheckedByDate[dateStr] || {};
+                    totalCompleted += Object.values(dayTasks).filter(v => v === true).length;
+                }
+            });
+        }
+        return totalCompleted;
+    }
+
+    function getLifetimeChecklistStats() {
+        let totalCompleted = 0;
+        if (state.checklistCheckedByDate) {
+            Object.keys(state.checklistCheckedByDate).forEach(dateStr => {
+                const dayTasks = state.checklistCheckedByDate[dateStr] || {};
+                totalCompleted += Object.values(dayTasks).filter(v => v === true).length;
+            });
+        }
+        return totalCompleted;
     }
 
     function updateDashboardStats() {

@@ -279,6 +279,70 @@
                         </div>
 
                     </div>
+
+                    <!-- Visualizations Row -->
+                    <div class="visualizations-row" id="dashboard-visualizations-row">
+                        <div class="widget-card visualization-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="bar-chart-3"></i> Task Completion Analytics</h3>
+                                <span class="badge bg-purple" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Real-time</span>
+                            </div>
+                            <div class="widget-content viz-content-grid">
+                                <!-- 1. Daily Progress -->
+                                <div class="viz-card daily-viz">
+                                    <span class="viz-card-title">Daily Progress</span>
+                                    <div class="radial-gauge-container">
+                                        <svg class="radial-svg" viewBox="0 0 100 100">
+                                            <circle class="radial-circle-bg" cx="50" cy="50" r="40"></circle>
+                                            <circle class="radial-circle-fill" id="viz-radial-ring" cx="50" cy="50" r="40"></circle>
+                                        </svg>
+                                        <div class="radial-center-text">
+                                            <span class="radial-val" id="viz-daily-pct">0%</span>
+                                            <span class="radial-desc" id="viz-daily-fraction">0/0</span>
+                                        </div>
+                                    </div>
+                                    <span class="viz-footer-label">Completed Today</span>
+                                </div>
+
+                                <!-- 2. Weekly Bar Chart -->
+                                <div class="viz-card weekly-viz">
+                                    <span class="viz-card-title">Weekly History</span>
+                                    <div class="bar-chart-container" id="viz-weekly-chart">
+                                        <!-- Dynamic bars populated by app.js -->
+                                    </div>
+                                    <span class="viz-footer-label">Completions by Day</span>
+                                </div>
+
+                                <!-- 3. Monthly, Lifetime & Avg Stats -->
+                                <div class="viz-card summary-viz">
+                                    <span class="viz-card-title">Completions Overview</span>
+                                    <div class="summary-stats-stack">
+                                        <div class="summary-stat-item">
+                                            <div class="summary-stat-icon bg-green-dim"><i data-lucide="calendar"></i></div>
+                                            <div class="summary-stat-data">
+                                                <span class="summary-stat-val" id="viz-monthly-count">0</span>
+                                                <span class="summary-stat-label">This Month</span>
+                                            </div>
+                                        </div>
+                                        <div class="summary-stat-item">
+                                            <div class="summary-stat-icon bg-blue-dim"><i data-lucide="trophy"></i></div>
+                                            <div class="summary-stat-data">
+                                                <span class="summary-stat-val" id="viz-lifetime-count">0</span>
+                                                <span class="summary-stat-label">Lifetime Total</span>
+                                            </div>
+                                        </div>
+                                        <div class="summary-stat-item">
+                                            <div class="summary-stat-icon bg-purple-dim"><i data-lucide="trending-up"></i></div>
+                                            <div class="summary-stat-data">
+                                                <span class="summary-stat-val" id="viz-daily-avg">0</span>
+                                                <span class="summary-stat-label">Daily Average</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 2. WEEKLY PLANNER VIEW -->
