@@ -419,6 +419,21 @@ function initNavigation() {
         safeCreateIcons();
     });
 
+    // Expand sidebar when clicking on the search box in collapsed state
+    const searchBox = document.querySelector(".sidebar-search-box");
+    if (searchBox) {
+        searchBox.addEventListener("click", () => {
+            if (sidebar.classList.contains("collapsed")) {
+                sidebar.classList.remove("collapsed");
+                const icon = sidebarToggle.querySelector("i");
+                if (icon) {
+                    icon.setAttribute("data-lucide", "chevron-left");
+                }
+                safeCreateIcons();
+            }
+        });
+    }
+
     // Mobile Drawer navigation toggles
     const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
     const sidebarBackdrop = document.getElementById("sidebar-backdrop");
