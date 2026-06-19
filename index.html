@@ -14,6 +14,13 @@
     <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
 </head>
 <body class="font-sans">
+    <!-- Sidebar backdrop overlay for mobile drawer -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Floating mobile menu toggle button -->
+    <button class="floating-menu-btn" id="mobile-menu-toggle" title="Open Menu">
+        <i data-lucide="menu"></i>
+    </button>
     
     <!-- Workspace Layout -->
     <div class="workspace-container">
@@ -83,25 +90,6 @@
 
         <!-- Main Workspace Viewport -->
         <main class="main-content">
-            <!-- Sticky Navigation Topbar -->
-            <div class="workspace-topbar">
-                <div class="nav-history-buttons">
-                    <button class="nav-btn" id="nav-prev-btn" title="Previous Page">
-                        <i data-lucide="chevron-left"></i>
-                        <span class="nav-btn-text">Back</span>
-                    </button>
-                    <button class="nav-btn" id="nav-next-btn" title="Next Page">
-                        <span class="nav-btn-text">Next</span>
-                        <i data-lucide="chevron-right"></i>
-                    </button>
-                </div>
-                <div class="workspace-breadcrumbs" id="workspace-breadcrumbs">
-                    <i data-lucide="folder" class="breadcrumb-icon"></i>
-                    <span id="breadcrumb-parent">Workspace</span>
-                    <span class="breadcrumb-separator">/</span>
-                    <span id="breadcrumb-current">Dashboard</span>
-                </div>
-            </div>
 
             <!-- Decorative Header Cover -->
             <div class="workspace-cover" id="workspace-cover">
@@ -443,6 +431,24 @@
                         </div>
                     </div>
                 </section>
+            </div>
+
+            <!-- Floating Bottom Navigation Bar -->
+            <div class="workspace-bottombar" id="workspace-bottombar">
+                <button class="nav-btn" id="nav-prev-btn" title="Previous Page">
+                    <i data-lucide="chevron-left"></i>
+                    <span class="nav-btn-text">Back</span>
+                </button>
+                <div class="workspace-breadcrumbs" id="workspace-breadcrumbs">
+                    <i data-lucide="folder" class="breadcrumb-icon"></i>
+                    <span id="breadcrumb-parent">Workspace</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span id="breadcrumb-current">Dashboard</span>
+                </div>
+                <button class="nav-btn" id="nav-next-btn" title="Next Page">
+                    <span class="nav-btn-text">Next</span>
+                    <i data-lucide="chevron-right"></i>
+                </button>
             </div>
         </main>
     </div>

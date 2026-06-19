@@ -2413,17 +2413,31 @@ input:checked + .slider:before {
 }
 .settings-link:hover { text-decoration: underline; }
 
-/* Sticky Navigation Topbar Style */
-.workspace-topbar {
-    height: 44px;
+/* Sticky Floating Bottom Navigation Bar */
+.workspace-bottombar {
+    position: sticky;
+    bottom: 20px;
+    align-self: center;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
+    gap: 12px;
+    background: rgba(26, 26, 26, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    padding: 6px 14px;
+    border-radius: 30px;
     z-index: 99;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .workspace-bottombar {
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .nav-history-buttons {
@@ -2433,24 +2447,30 @@ input:checked + .slider:before {
 }
 
 .nav-btn {
-    background: var(--bg-card-hover);
-    border: 1px solid var(--border-color);
+    background: transparent;
+    border: 1px solid transparent;
     color: var(--text-primary);
     height: 28px;
-    border-radius: 6px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 0 10px;
+    padding: 0 12px;
     font-size: 0.8rem;
     font-weight: 500;
 }
 
-.nav-btn:hover {
-    background: var(--bg-card);
-    border-color: var(--text-muted);
+.nav-btn:hover:not(:disabled) {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+}
+
+.nav-btn:disabled {
+    color: var(--text-muted);
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .nav-btn svg {
@@ -2464,6 +2484,13 @@ input:checked + .slider:before {
     }
     .nav-btn {
         padding: 0 8px;
+        border-radius: 50%;
+        width: 28px;
+        justify-content: center;
+    }
+    .workspace-bottombar {
+        bottom: 12px;
+        padding: 6px 10px;
     }
 }
 
@@ -2491,5 +2518,90 @@ input:checked + .slider:before {
 #breadcrumb-current {
     color: var(--text-primary);
     font-weight: 600;
+}
+
+/* Sidebar Drawer Backdrop for Mobile */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999;
+    transition: opacity 0.3s ease;
+}
+
+/* Floating Mobile Menu Button */
+.floating-menu-btn {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: rgba(25, 25, 25, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    z-index: 998;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+[data-theme="light"] .floating-menu-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.floating-menu-btn:hover {
+    transform: scale(1.05);
+}
+
+.floating-menu-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Responsive sidebar drawer logic */
+@media (max-width: 768px) {
+    .floating-menu-btn {
+        display: flex;
+    }
+    
+    .sidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: -260px; /* Hide offscreen */
+        width: 260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    body.sidebar-open .sidebar {
+        transform: translateX(260px); /* Slide drawer in */
+    }
+    
+    body.sidebar-open .sidebar-backdrop {
+        display: block;
+    }
+    
+    /* Ensure page cover has enough top margin for floating button on mobile */
+    .workspace-cover {
+        height: 160px;
+    }
 }
 

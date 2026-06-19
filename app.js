@@ -419,6 +419,22 @@ function initNavigation() {
         safeCreateIcons();
     });
 
+    // Mobile Drawer navigation toggles
+    const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener("click", () => {
+            document.body.classList.toggle("sidebar-open");
+        });
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener("click", () => {
+            document.body.classList.remove("sidebar-open");
+        });
+    }
+
     // Prev / Next page-to-page sequential navigation handlers
     const prevBtn = document.getElementById("nav-prev-btn");
     const nextBtn = document.getElementById("nav-next-btn");
@@ -562,6 +578,9 @@ function initRouting() {
 }
 
 function switchView(viewName, docId = null, isHistoryNav = false) {
+    // Close mobile drawer on view switch
+    document.body.classList.remove("sidebar-open");
+
     if (!isHistoryNav) {
         const currentView = state.currentView;
         const currentDocId = state.activeDocumentId;
