@@ -999,13 +999,23 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         if (!state.checklistCheckedByDate[todayDateStr]) state.checklistCheckedByDate[todayDateStr] = {};
 
         state.checklistCheckedByDate[todayDateStr][taskId] = checked;
+
+        const checklist = getTodayChecklist();
+        const task = checklist.find(t => t.id === taskId);
+        const taskText = task ? task.text : "Task";
+
         if (checked) {
             markActiveToday();
+            autoLogToAnalytics(taskText);
+        } else {
+            removeLogFromAnalytics(taskText);
         }
+
         saveState();
         updateDashboardStats();
         renderAchievements();
         renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
     }
 
     function addCustomTask(text) {
@@ -1022,10 +1032,18 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         renderDailyChecklist();
         updateDashboardStats();
         renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
     }
 
     function deleteCustomTask(taskId) {
         const todayDateStr = new Date().toDateString();
+
+        const checklist = getTodayChecklist();
+        const task = checklist.find(t => t.id === taskId);
+        if (task) {
+            removeLogFromAnalytics(task.text);
+        }
+
         if (state.customChecklistByDate && state.customChecklistByDate[todayDateStr]) {
             state.customChecklistByDate[todayDateStr] = state.customChecklistByDate[todayDateStr].filter(t => t.id !== taskId);
         }
@@ -1036,17 +1054,23 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         renderDailyChecklist();
         updateDashboardStats();
         renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
     }
 
     function resetTodayChecklist() {
         const todayDateStr = new Date().toDateString();
         if (state.checklistCheckedByDate && state.checklistCheckedByDate[todayDateStr]) {
+            const checklist = getTodayChecklist();
+            checklist.forEach(task => {
+                removeLogFromAnalytics(task.text);
+            });
             state.checklistCheckedByDate[todayDateStr] = {};
         }
         saveState();
         renderDailyChecklist();
         updateDashboardStats();
         renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
     }
 
     function renderDashboard() {
@@ -1055,6 +1079,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         renderHabits();
         renderAchievements();
         renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
     }
 
     function renderTaskVisualizations() {
@@ -2294,3 +2319,251 @@ socket.on('workUpdate', (data) => {
 socket.on('initialState', (state) => {
     console.log('Initial state loaded via Socket.io');
 });
+
+// ==========================================================================
+// Auto-Logger System & Visualizations Rendering
+// ==========================================================================
+
+function autoLogToAnalytics(taskText) {
+    let tasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 5);
+
+    function detectCategory(text) {
+        text = text.toLowerCase();
+        if (text.includes('python') || text.includes('ai') || text.includes('ml'))
+            return 'python';
+        if (text.includes('dsa') || text.includes('array') || text.includes('tree')
+            || text.includes('stack') || text.includes('queue') || text.includes('graph'))
+            return 'dsa';
+        if (text.includes('web') || text.includes('html') || text.includes('react')
+            || text.includes('node') || text.includes('js'))
+            return 'webdev';
+        if (text.includes('app dev') || text.includes('app'))
+            return 'appdev';
+        if (text.includes('photoshop') || text.includes('premiere')
+            || text.includes('canva') || text.includes('design')
+            || text.includes('after effects'))
+            return 'design';
+        if (text.includes('leetcode') || text.includes('leet'))
+            return 'leet';
+        if (text.includes('revision') || text.includes('review'))
+            return 'revision';
+        return 'other';
+    }
+
+    const cat = detectCategory(taskText);
+    const newEntry = {
+        text: taskText,
+        cat: cat,
+        date: date,
+        time: time,
+        auto: true
+    };
+
+    const alreadyLogged = tasks.some(t =>
+        t.text === taskText && t.date === date
+    );
+
+    if (!alreadyLogged) {
+        tasks.push(newEntry);
+        localStorage.setItem('jagt_tasks', JSON.stringify(tasks));
+        console.log(`Auto-logged to Analytics: ${taskText}`);
+    }
+}
+
+function removeLogFromAnalytics(taskText) {
+    let tasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
+    const today = new Date().toISOString().slice(0, 10);
+    tasks = tasks.filter(t =>
+        !(t.text === taskText && t.date === today)
+    );
+    localStorage.setItem('jagt_tasks', JSON.stringify(tasks));
+    console.log(`Removed from Analytics log: ${taskText}`);
+}
+
+function renderAutoLoggerVisualizations() {
+    const container = document.getElementById("dashboard-auto-logger-row");
+    if (!container || state.currentView !== "dashboard") return;
+
+    const tasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
+
+    // 1. Calculate counts
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+    const currentMonthStr = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+    // Weekly dateStrings in YYYY-MM-DD
+    const datesForWeek = getDatesForWeek();
+    const weekDateStrings = Object.values(datesForWeek).map(dateStr => {
+        const d = new Date(dateStr);
+        return d.toISOString().slice(0, 10);
+    });
+
+    const yesterdayCount = tasks.filter(t => t.date === yesterdayStr).length;
+    const todayCount = tasks.filter(t => t.date === todayStr).length;
+    const weekCount = tasks.filter(t => weekDateStrings.includes(t.date)).length;
+    const monthCount = tasks.filter(t => t.date.startsWith(currentMonthStr)).length;
+    const totalCount = tasks.length;
+
+    const yesterdayEl = document.getElementById("log-yesterday-cnt");
+    const todayEl = document.getElementById("log-today-cnt");
+    const weekEl = document.getElementById("log-week-cnt");
+    const monthEl = document.getElementById("log-month-cnt");
+    const totalEl = document.getElementById("log-total-cnt");
+
+    if (yesterdayEl) yesterdayEl.textContent = yesterdayCount;
+    if (todayEl) todayEl.textContent = todayCount;
+    if (weekEl) weekEl.textContent = weekCount;
+    if (monthEl) monthEl.textContent = monthCount;
+    if (totalEl) totalEl.textContent = totalCount;
+
+    // 2. Render Subject Performance Progress Bars
+    const barsContainer = document.getElementById("logger-bars-container");
+    if (barsContainer) {
+        barsContainer.innerHTML = "";
+        const catCounts = {
+            python: 0,
+            dsa: 0,
+            webdev: 0,
+            appdev: 0,
+            design: 0,
+            leet: 0,
+            revision: 0,
+            other: 0
+        };
+
+        tasks.forEach(t => {
+            if (catCounts[t.cat] !== undefined) {
+                catCounts[t.cat]++;
+            } else {
+                catCounts.other++;
+            }
+        });
+
+        const catNames = {
+            python: "Python + AI/ML",
+            dsa: "DSA",
+            webdev: "Web Dev",
+            appdev: "App Dev",
+            design: "Design / Edit",
+            leet: "LeetCode",
+            revision: "Revision",
+            other: "Other"
+        };
+
+        const catIcons = {
+            python: "terminal",
+            dsa: "shield",
+            webdev: "code",
+            appdev: "smartphone",
+            design: "image",
+            leet: "zap",
+            revision: "rotate-ccw",
+            other: "help-circle"
+        };
+
+        let maxCount = 5;
+        Object.values(catCounts).forEach(c => {
+            if (c > maxCount) maxCount = c;
+        });
+
+        Object.keys(catCounts).forEach(cat => {
+            const count = catCounts[cat];
+            const pct = Math.round((count / maxCount) * 100);
+
+            const barItem = document.createElement("div");
+            barItem.className = "logger-bar-item";
+            barItem.innerHTML = `
+                <div class="logger-bar-meta">
+                    <span class="logger-bar-name">
+                        <i data-lucide="${catIcons[cat]}" style="width:12px; height:12px; opacity:0.8;"></i>
+                        ${catNames[cat]}
+                    </span>
+                    <span class="logger-bar-cnt">${count} logged</span>
+                </div>
+                <div class="logger-bar-outer">
+                    <div class="logger-bar-inner bg-bar-${cat}" style="width: ${pct}%;"></div>
+                </div>
+            `;
+            barsContainer.appendChild(barItem);
+        });
+    }
+
+    // 3. Render Ordered Log List (Recent 6 entries)
+    const historyContainer = document.getElementById("logger-history-container");
+    if (historyContainer) {
+        historyContainer.innerHTML = "";
+
+        const recentTasks = [...tasks].reverse().slice(0, 6);
+
+        if (recentTasks.length === 0) {
+            historyContainer.innerHTML = `<p class="text-muted" style="font-size: 0.8rem; text-align: center; padding: 30px 0;">No tasks auto-logged yet. Tick checklist items to log them!</p>`;
+            return;
+        }
+
+        const catBadges = {
+            python: "badge-python",
+            dsa: "badge-dsa",
+            webdev: "badge-webdev",
+            appdev: "badge-appdev",
+            design: "badge-design",
+            leet: "badge-leet",
+            revision: "badge-revision",
+            other: "badge-other"
+        };
+
+        const catLabels = {
+            python: "Python + AI",
+            dsa: "DSA",
+            webdev: "Web Dev",
+            appdev: "App Dev",
+            design: "Design",
+            leet: "LeetCode",
+            revision: "Revision",
+            other: "Other"
+        };
+
+        recentTasks.forEach(t => {
+            const item = document.createElement("div");
+            item.className = "logger-history-item";
+
+            const dateParts = new Date(t.date).toDateString().split(" ");
+            const displayDate = `${dateParts[1]} ${dateParts[2]}`;
+
+            item.innerHTML = `
+                <div class="logger-hist-left">
+                    <span class="logger-hist-text" title="${t.text}">${t.text}</span>
+                    <span class="logger-hist-time-tag">${displayDate} @ ${t.time}</span>
+                </div>
+                <div class="logger-hist-right">
+                    <span class="logger-cat-badge ${catBadges[t.cat] || 'badge-other'}">${catLabels[t.cat] || t.cat}</span>
+                    <span class="logger-auto-tag">Auto</span>
+                </div>
+            `;
+            historyContainer.appendChild(item);
+        });
+    }
+
+    safeCreateIcons();
+}
+
+// Global listeners and polling for jagt_tasks
+window.addEventListener('storage', function(e) {
+    if (e.key === 'jagt_tasks') {
+        if (state.currentView === "dashboard") {
+            renderAutoLoggerVisualizations();
+        }
+    }
+});
+
+setInterval(function() {
+    if (state.currentView === "dashboard") {
+        renderAutoLoggerVisualizations();
+    }
+}, 30000);

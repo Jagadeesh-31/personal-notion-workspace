@@ -343,6 +343,59 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Auto-Logger & Log History Widget -->
+                    <div class="visualizations-row" id="dashboard-auto-logger-row" style="margin-top: 24px;">
+                        <div class="widget-card auto-logger-widget">
+                            <div class="widget-header">
+                                <h3><i data-lucide="check-circle-2"></i> Auto-Logger Task History</h3>
+                                <span class="badge bg-green" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Auto-Sync Enabled</span>
+                            </div>
+                            <div class="widget-content logger-viz-grid">
+                                <!-- 1. Counts Row -->
+                                <div class="logger-stats-row">
+                                    <div class="logger-stat-card">
+                                        <span class="logger-stat-num" id="log-yesterday-cnt">0</span>
+                                        <span class="logger-stat-lbl">Yesterday</span>
+                                    </div>
+                                    <div class="logger-stat-card">
+                                        <span class="logger-stat-num" id="log-today-cnt">0</span>
+                                        <span class="logger-stat-lbl">Today</span>
+                                    </div>
+                                    <div class="logger-stat-card">
+                                        <span class="logger-stat-num" id="log-week-cnt">0</span>
+                                        <span class="logger-stat-lbl">This Week</span>
+                                    </div>
+                                    <div class="logger-stat-card">
+                                        <span class="logger-stat-num" id="log-month-cnt">0</span>
+                                        <span class="logger-stat-lbl">This Month</span>
+                                    </div>
+                                    <div class="logger-stat-card highlight">
+                                        <span class="logger-stat-num" id="log-total-cnt">0</span>
+                                        <span class="logger-stat-lbl">Lifetime</span>
+                                    </div>
+                                </div>
+
+                                <div class="logger-main-content">
+                                    <!-- 2. Subject Progress Bars -->
+                                    <div class="logger-categories-box">
+                                        <h4 class="logger-section-title">Subject Performance</h4>
+                                        <div class="logger-bars-stack" id="logger-bars-container">
+                                            <!-- Dynamic progress bars -->
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Recent Log List -->
+                                    <div class="logger-history-box">
+                                        <h4 class="logger-section-title">Ordered Task Log (Recent)</h4>
+                                        <div class="logger-history-list" id="logger-history-container">
+                                            <!-- Dynamic log items -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 2. WEEKLY PLANNER VIEW -->
