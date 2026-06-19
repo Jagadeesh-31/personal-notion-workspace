@@ -152,7 +152,7 @@ input, textarea, select {
     height: 100%;
     z-index: 10;
     transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), transform var(--transition-speed);
-    overflow: hidden;
+    overflow: visible;
     flex-shrink: 0;
 }
 
