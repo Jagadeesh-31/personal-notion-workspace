@@ -174,18 +174,25 @@ const CLOUD_KEY = "notion_cloud_config"; // stores { apiKey, binId } in localSto
 // ==========================================================================
 
 // Built-in API key — cloud sync works automatically on first launch
-const DEFAULT_API_KEY = "$2a$10$DFOntZXjFqfAcXtaGW.B/uWAYuMn0ZeBN39WJwHfp24dLPdHZbFNe";
+const DEFAULT_API_KEY = "$2a$10$GWu.UGo.Cs7x6OGfC1eh6urlnbjTwhmZOyNPRTQ8/xOlzc4LHQlxS";
+const DEFAULT_BIN_ID = "6a34f495f5f4af5e290d9c68";
 
 function getCloudConfig() {
     try {
         const raw = localStorage.getItem(CLOUD_KEY);
         const saved = raw ? JSON.parse(raw) : {};
-        // Always use the built-in key if none saved
+        // Migrate legacy/invalid keys or empty configurations to the new working defaults
+        if (saved.apiKey === "$2a$10$DFOntZXjFqfAcXtaGW.B/uWAYuMn0ZeBN39WJwHfp24dLPdHZbFNe" || !saved.binId) {
+            return {
+                apiKey: DEFAULT_API_KEY,
+                binId: DEFAULT_BIN_ID
+            };
+        }
         return {
             apiKey: saved.apiKey || DEFAULT_API_KEY,
-            binId: saved.binId || ''
+            binId: saved.binId || DEFAULT_BIN_ID
         };
-    } catch (e) { return { apiKey: DEFAULT_API_KEY, binId: '' }; }
+    } catch (e) { return { apiKey: DEFAULT_API_KEY, binId: DEFAULT_BIN_ID }; }
 }
 
 function setCloudConfig(apiKey, binId) {
