@@ -382,9 +382,26 @@ function validateHabitsStreak() {
     }
 }
 
-// Navigation History Variables
+// Navigation History / Sequence Variables
 let historyIndex = 0;
 let historyLength = 0;
+
+function getPageSequence() {
+    const sequence = [
+        { view: "dashboard", docId: null },
+        { view: "schedule", docId: null },
+        { view: "goals", docId: null }
+    ];
+    // Add all documents in order
+    if (state.documents) {
+        state.documents.forEach(doc => {
+            sequence.push({ view: "document", docId: doc.id });
+        });
+    }
+    // Add settings at the end
+    sequence.push({ view: "settings", docId: null });
+    return sequence;
+}
 
 function initNavigation() {
     // Sidebar toggle (collapse / expand)
@@ -402,19 +419,35 @@ function initNavigation() {
         safeCreateIcons();
     });
 
-    // Start / End topbar button handlers
-    const startBtn = document.getElementById("nav-start-btn");
-    const endBtn = document.getElementById("nav-end-btn");
+    // Prev / Next page-to-page sequential navigation handlers
+    const prevBtn = document.getElementById("nav-prev-btn");
+    const nextBtn = document.getElementById("nav-next-btn");
 
-    if (startBtn) {
-        startBtn.addEventListener("click", () => {
-            switchView("dashboard");
+    if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+            const seq = getPageSequence();
+            const currentIndex = seq.findIndex(item => 
+                item.view === state.currentView && 
+                (item.view !== "document" || item.docId === state.activeDocumentId)
+            );
+            if (currentIndex > 0) {
+                const target = seq[currentIndex - 1];
+                switchView(target.view, target.docId);
+            }
         });
     }
 
-    if (endBtn) {
-        endBtn.addEventListener("click", () => {
-            switchView("settings");
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            const seq = getPageSequence();
+            const currentIndex = seq.findIndex(item => 
+                item.view === state.currentView && 
+                (item.view !== "document" || item.docId === state.activeDocumentId)
+            );
+            if (currentIndex >= 0 && currentIndex < seq.length - 1) {
+                const target = seq[currentIndex + 1];
+                switchView(target.view, target.docId);
+            }
         });
     }
 
@@ -463,6 +496,19 @@ function updateThemeUI() {
 }
 
 function updateBreadcrumbs() {
+    const prevBtn = document.getElementById("nav-prev-btn");
+    const nextBtn = document.getElementById("nav-next-btn");
+
+    if (prevBtn && nextBtn) {
+        const seq = getPageSequence();
+        const currentIndex = seq.findIndex(item => 
+            item.view === state.currentView && 
+            (item.view !== "document" || item.docId === state.activeDocumentId)
+        );
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex === -1 || currentIndex >= seq.length - 1;
+    }
+
     const breadcrumbCurrent = document.getElementById("breadcrumb-current");
     const breadcrumbParent = document.getElementById("breadcrumb-parent");
     if (breadcrumbCurrent && breadcrumbParent) {
