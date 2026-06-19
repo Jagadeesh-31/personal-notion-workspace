@@ -83,6 +83,24 @@
 
         <!-- Main Workspace Viewport -->
         <main class="main-content">
+            <!-- Sticky Navigation Topbar -->
+            <div class="workspace-topbar">
+                <div class="nav-history-buttons">
+                    <button class="nav-btn" id="nav-back-btn" title="Go back" disabled>
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <button class="nav-btn" id="nav-forward-btn" title="Go forward" disabled>
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+                <div class="workspace-breadcrumbs" id="workspace-breadcrumbs">
+                    <i data-lucide="folder" class="breadcrumb-icon"></i>
+                    <span id="breadcrumb-parent">Workspace</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span id="breadcrumb-current">Dashboard</span>
+                </div>
+            </div>
+
             <!-- Decorative Header Cover -->
             <div class="workspace-cover" id="workspace-cover">
                 <div class="cover-gradient"></div>

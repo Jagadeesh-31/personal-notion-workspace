@@ -382,9 +382,10 @@ function validateHabitsStreak() {
     }
 }
 
-// ==========================================================================
-// View Router & Sidebar
-// ==========================================================================
+// Navigation History Stacks
+let historyStack = [];
+let forwardStack = [];
+let isNavigatingHistory = false;
 
 function initNavigation() {
     // Sidebar toggle (collapse / expand)
@@ -401,6 +402,36 @@ function initNavigation() {
         }
         safeCreateIcons();
     });
+
+    // History Back/Forward button handlers
+    const backBtn = document.getElementById("nav-back-btn");
+    const forwardBtn = document.getElementById("nav-forward-btn");
+
+    if (backBtn) {
+        backBtn.addEventListener("click", () => {
+            if (historyStack.length > 0) {
+                const prev = historyStack.pop();
+                const current = { view: state.currentView, docId: state.activeDocumentId };
+                forwardStack.push(current);
+                isNavigatingHistory = true;
+                switchView(prev.view, prev.docId);
+                isNavigatingHistory = false;
+            }
+        });
+    }
+
+    if (forwardBtn) {
+        forwardBtn.addEventListener("click", () => {
+            if (forwardStack.length > 0) {
+                const next = forwardStack.pop();
+                const current = { view: state.currentView, docId: state.activeDocumentId };
+                historyStack.push(current);
+                isNavigatingHistory = true;
+                switchView(next.view, next.docId);
+                isNavigatingHistory = false;
+            }
+        });
+    }
 
     // View buttons click handlers
     document.querySelectorAll("[data-view]").forEach(item => {
@@ -446,7 +477,42 @@ function updateThemeUI() {
     safeCreateIcons();
 }
 
+function updateNavigationButtons() {
+    const backBtn = document.getElementById("nav-back-btn");
+    const forwardBtn = document.getElementById("nav-forward-btn");
+    if (backBtn) backBtn.disabled = historyStack.length === 0;
+    if (forwardBtn) forwardBtn.disabled = forwardStack.length === 0;
+
+    const breadcrumbCurrent = document.getElementById("breadcrumb-current");
+    const breadcrumbParent = document.getElementById("breadcrumb-parent");
+    if (breadcrumbCurrent && breadcrumbParent) {
+        if (state.currentView === "document" && state.activeDocumentId) {
+            breadcrumbParent.textContent = "Documents";
+            const doc = state.documents.find(d => d.id === state.activeDocumentId);
+            breadcrumbCurrent.textContent = doc ? `${doc.emoji || '📄'} ${doc.title}` : "Untitled Document";
+        } else {
+            breadcrumbParent.textContent = "Workspace";
+            const viewNames = {
+                dashboard: "Dashboard",
+                schedule: "Weekly Schedule",
+                goals: "Goals & Analytics",
+                settings: "Settings"
+            };
+            breadcrumbCurrent.textContent = viewNames[state.currentView] || state.currentView;
+        }
+    }
+}
+
 function switchView(viewName, docId = null) {
+    if (!isNavigatingHistory) {
+        const currentView = state.currentView;
+        const currentDocId = state.activeDocumentId;
+        if (currentView !== viewName || currentDocId !== docId) {
+            historyStack.push({ view: currentView, docId: currentDocId });
+            forwardStack = []; // clear forward stack
+        }
+    }
+
     state.currentView = viewName;
 
     // Manage active state in sidebar menu
@@ -487,10 +553,11 @@ function switchView(viewName, docId = null) {
         renderGoals();
     } else if (viewName === "document" && docId) {
         loadDocumentEditor(docId);
-
-
         saveState();
     }
+
+    // Update breadcrumbs and history buttons
+    updateNavigationButtons();
 }
 
 function applyCoverStyle(coverKey, defaultKey = "dashboard") {
