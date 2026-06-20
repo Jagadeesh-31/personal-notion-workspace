@@ -2093,7 +2093,23 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
                     console.log("Cloud real-time sync: Newer state detected. Merging...");
                     const oldCustomCovers = state.customCovers || {};
                     state = { ...state, ...imported, customCovers: oldCustomCovers };
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+                    // Migration: Auto-migrate 6:00 AM schedule and checklist to 7:00 AM timetable
+                    let migrated = false;
+                    if (state.schedule && state.schedule.length > 0 && state.schedule[0].time === "6:00 AM") {
+                        state.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+                        migrated = true;
+                    }
+                    if (state.checklist && state.checklist.length > 0 && state.checklist[0].text.includes("6:00 AM")) {
+                        state.checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+                        migrated = true;
+                    }
+
+                    if (migrated) {
+                        saveState();
+                    } else {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                    }
 
                     updateCloudSyncStatus('synced');
 
@@ -2126,14 +2142,21 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
                     state = { ...state, ...cloudData, customCovers: covers };
 
                     // Migration: Auto-migrate 6:00 AM schedule and checklist to 7:00 AM timetable
+                    let migrated = false;
                     if (state.schedule && state.schedule.length > 0 && state.schedule[0].time === "6:00 AM") {
                         state.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+                        migrated = true;
                     }
                     if (state.checklist && state.checklist.length > 0 && state.checklist[0].text.includes("6:00 AM")) {
                         state.checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+                        migrated = true;
                     }
 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                    if (migrated) {
+                        saveState();
+                    } else {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                    }
                     validateHabitsStreak();
                 }
                 checkWeeklyReset(true);
