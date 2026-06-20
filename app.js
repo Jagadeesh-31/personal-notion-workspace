@@ -371,6 +371,16 @@ function loadState() {
             };
             checkWeeklyReset(true);
             validateHabitsStreak();
+
+            // Migration: Auto-migrate 6:00 AM schedule and checklist to 7:00 AM timetable
+            if (state.schedule && state.schedule.length > 0 && state.schedule[0].time === "6:00 AM") {
+                state.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+                saveState();
+            }
+            if (state.checklist && state.checklist.length > 0 && state.checklist[0].text.includes("6:00 AM")) {
+                state.checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+                saveState();
+            }
         } else {
             saveState();
         }
@@ -2114,6 +2124,15 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
                     console.log("Cloud state is newer. Merging from cloud...");
                     const covers = state.customCovers || {};
                     state = { ...state, ...cloudData, customCovers: covers };
+
+                    // Migration: Auto-migrate 6:00 AM schedule and checklist to 7:00 AM timetable
+                    if (state.schedule && state.schedule.length > 0 && state.schedule[0].time === "6:00 AM") {
+                        state.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+                    }
+                    if (state.checklist && state.checklist.length > 0 && state.checklist[0].text.includes("6:00 AM")) {
+                        state.checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+                    }
+
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
                     validateHabitsStreak();
                 }
