@@ -3094,12 +3094,14 @@ input:checked + .slider:before {
     flex: 1;
     min-width: 80px;
     box-shadow: var(--card-shadow);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
 }
 
 .logger-stat-card:hover {
-    transform: translateY(-1px);
-    border-color: rgba(var(--accent-rgb), 0.2);
+    transform: translateY(-2px);
+    border-color: rgba(var(--accent-rgb), 0.35);
+    background-color: var(--bg-card-hover);
 }
 
 .logger-stat-card.highlight {
@@ -3303,5 +3305,281 @@ input:checked + .slider:before {
     border: 1px solid var(--border-color);
     padding: 1px 6px;
     border-radius: 4px;
+}
+
+/* ==========================================================================
+   Clickable Stat Cards & Task Detail Panel Styles
+   ========================================================================== */
+
+.task-detail-panel {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+    margin-bottom: 24px;
+    animation: panelSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes panelSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.task-detail-panel.active {
+    display: flex;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.panel-title-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.panel-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.panel-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.panel-badge.badge-done {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.panel-badge.badge-pending {
+    background: rgba(var(--accent-rgb), 0.15);
+    color: var(--accent-color);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
+}
+
+.panel-close-btn {
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.panel-close-btn:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.panel-close-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Lifetime Search Input */
+.panel-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-workspace);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    transition: border-color 0.2s;
+}
+
+.panel-search-container:focus-within {
+    border-color: var(--accent-color);
+}
+
+.panel-search-container .search-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    margin-right: 8px;
+}
+
+.panel-search-container input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+.scrollable-lists {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Collapsible sections */
+.panel-section {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background-color: rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+[data-theme="light"] .panel-section {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.panel-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    background-color: var(--bg-card-hover);
+    transition: background-color 0.15s;
+    user-select: none;
+}
+
+.panel-section-header:hover {
+    background-color: var(--border-color);
+}
+
+.section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.section-label i {
+    width: 14px;
+    height: 14px;
+}
+
+.section-toggle-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.panel-section.collapsed .section-toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.panel-section-content {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 1500px;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.panel-section.collapsed .panel-section-content {
+    display: none;
+    max-height: 0;
+    padding: 0;
+}
+
+/* Rows inside sections */
+.task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    font-size: 0.8rem;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.task-row:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.task-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+    padding-right: 8px;
+}
+
+.task-row-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.task-row-icon-wrap i {
+    width: 14px;
+    height: 14px;
+}
+
+.task-row-name {
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.task-row-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.task-row-time {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+}
+
+/* Pulsing dot for ongoing tasks */
+.pulsing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    box-shadow: 0 0 8px var(--accent-color);
+    animation: livePulsing 2s infinite;
+    display: inline-block;
 }
 

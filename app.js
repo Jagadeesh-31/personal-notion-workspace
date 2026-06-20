@@ -112,6 +112,7 @@ function safeCreateIcons() {
 // ==========================================================================
 
 let state = {
+    activePeriod: null,
     schedule: DEFAULT_SCHEDULE,
     checklist: DEFAULT_CHECKLIST,
     goals: DEFAULT_GOALS,
@@ -314,6 +315,38 @@ function scheduledCloudSync() {
     }, 2000); // 2s debounce
 }
 
+// Check if the week has changed relative to lastActiveDate, and reset weekly activity/hours if so.
+function checkWeeklyReset(shouldSave = true) {
+    if (!state.lastActiveDate) return;
+
+    const today = new Date();
+    const lastActive = new Date(state.lastActiveDate);
+
+    // Helper to get the Monday of the week for a given date
+    function getMondayDate(d) {
+        const date = new Date(d);
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
+        return new Date(date.setDate(diff));
+    }
+
+    const todayMonday = getMondayDate(today);
+    const lastActiveMonday = getMondayDate(lastActive);
+
+    // Set hours, minutes, seconds, ms to 0 to compare dates accurately
+    todayMonday.setHours(0, 0, 0, 0);
+    lastActiveMonday.setHours(0, 0, 0, 0);
+
+    if (todayMonday.getTime() !== lastActiveMonday.getTime()) {
+        console.log("New week detected! Resetting Weekly Study Activity and Hours.");
+        state.weeklyActivity = { Mon: false, Tue: false, Wed: false, Thu: false, Fri: false, Sat: false, Sun: false };
+        state.weeklyActivityHours = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+        if (shouldSave) {
+            saveState();
+        }
+    }
+}
+
 // Load State from LocalStorage
 function loadState() {
     try {
@@ -336,6 +369,7 @@ function loadState() {
                 lastSyncedDate: parsed.lastSyncedDate !== undefined ? parsed.lastSyncedDate : state.lastSyncedDate,
                 lastAlertsSent: parsed.lastAlertsSent || state.lastAlertsSent
             };
+            checkWeeklyReset(true);
             validateHabitsStreak();
         } else {
             saveState();
@@ -795,6 +829,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
     ];
 
     function markActiveToday() {
+        checkWeeklyReset(false);
         const todayStr = new Date().toDateString();
 
         // 1. Weekly Grid update
@@ -1012,10 +1047,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         }
 
         saveState();
-        updateDashboardStats();
-        renderAchievements();
-        renderTaskVisualizations();
-        renderAutoLoggerVisualizations();
+        onTaskStateChanged();
     }
 
     function addCustomTask(text) {
@@ -1029,10 +1061,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             text: text
         });
         saveState();
-        renderDailyChecklist();
-        updateDashboardStats();
-        renderTaskVisualizations();
-        renderAutoLoggerVisualizations();
+        onTaskStateChanged();
     }
 
     function deleteCustomTask(taskId) {
@@ -1051,10 +1080,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             delete state.checklistCheckedByDate[todayDateStr][taskId];
         }
         saveState();
-        renderDailyChecklist();
-        updateDashboardStats();
-        renderTaskVisualizations();
-        renderAutoLoggerVisualizations();
+        onTaskStateChanged();
     }
 
     function resetTodayChecklist() {
@@ -1067,10 +1093,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             state.checklistCheckedByDate[todayDateStr] = {};
         }
         saveState();
-        renderDailyChecklist();
-        updateDashboardStats();
-        renderTaskVisualizations();
-        renderAutoLoggerVisualizations();
+        onTaskStateChanged();
     }
 
     function renderDashboard() {
@@ -1080,6 +1103,8 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
         renderAchievements();
         renderTaskVisualizations();
         renderAutoLoggerVisualizations();
+        renderTaskDetailPanel();
+        updateCardHighlights();
     }
 
     function renderTaskVisualizations() {
@@ -2092,6 +2117,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
                     validateHabitsStreak();
                 }
+                checkWeeklyReset(true);
                 completeInit();
             });
         });
@@ -2105,6 +2131,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             initHabitTracker();
             initPomodoroTimer();
             initDocumentModeToggle();
+            initStatCardClickListeners();
 
             initEventEditModal();
             initDocumentControls();
@@ -2278,6 +2305,7 @@ function applyCoverStyle(coverKey, defaultKey = "dashboard") {
             console.log("Midnight Rollover Detected: resetting daily checklist & habit status...");
             state.lastSyncedDate = todayStr;
 
+            checkWeeklyReset(false);
             validateHabitsStreak();
             saveState();
 
@@ -2324,34 +2352,568 @@ socket.on('initialState', (state) => {
 // Auto-Logger System & Visualizations Rendering
 // ==========================================================================
 
+function onTaskStateChanged() {
+    if (state.currentView === "dashboard") {
+        updateDashboardStats();
+        renderDailyChecklist();
+        renderTaskVisualizations();
+        renderAutoLoggerVisualizations();
+        renderTaskDetailPanel();
+        renderAchievements();
+    }
+}
+
+function detectCategory(text) {
+    text = text.toLowerCase();
+    if (text.includes('python') || text.includes('ai') || text.includes('ml'))
+        return 'python';
+    if (text.includes('dsa') || text.includes('array') || text.includes('tree')
+        || text.includes('stack') || text.includes('queue') || text.includes('graph'))
+        return 'dsa';
+    if (text.includes('web') || text.includes('html') || text.includes('react')
+        || text.includes('node') || text.includes('js'))
+        return 'webdev';
+    if (text.includes('app dev') || text.includes('app'))
+        return 'appdev';
+    if (text.includes('photoshop') || text.includes('premiere')
+        || text.includes('canva') || text.includes('design')
+        || text.includes('after effects'))
+        return 'design';
+    if (text.includes('leetcode') || text.includes('leet'))
+        return 'leet';
+    if (text.includes('revision') || text.includes('review'))
+        return 'revision';
+    return 'other';
+}
+
+let taskDetailSearchQuery = "";
+
+function getAllTasks() {
+    const tasksList = [];
+    const datesSet = new Set();
+    
+    // Add today and yesterday
+    const today = new Date();
+    datesSet.add(today.toDateString());
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    datesSet.add(yesterday.toDateString());
+    
+    // Add any dates from checklistCheckedByDate
+    if (state.checklistCheckedByDate) {
+        Object.keys(state.checklistCheckedByDate).forEach(dStr => {
+            datesSet.add(dStr);
+        });
+    }
+    // Add any dates from customChecklistByDate
+    if (state.customChecklistByDate) {
+        Object.keys(state.customChecklistByDate).forEach(dStr => {
+            datesSet.add(dStr);
+        });
+    }
+    
+    // Add any dates from jagt_tasks
+    const jagtTasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
+    jagtTasks.forEach(jt => {
+        if (jt.date) {
+            const parts = jt.date.split('-');
+            if (parts.length === 3) {
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                datesSet.add(d.toDateString());
+            }
+        }
+    });
+    
+    datesSet.forEach(dateStr => {
+        const dateObj = new Date(dateStr);
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const dayName = dayNames[dateObj.getDay()];
+        
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dayVal = String(dateObj.getDate()).padStart(2, '0');
+        const dateISO_full = `${year}-${month}-${dayVal}`;
+        
+        const dayChecked = state.checklistCheckedByDate && state.checklistCheckedByDate[dateStr] ? state.checklistCheckedByDate[dateStr] : {};
+        const dayCustom = state.customChecklistByDate && state.customChecklistByDate[dateStr] ? state.customChecklistByDate[dateStr] : [];
+        const dayJagt = jagtTasks.filter(jt => jt.date === dateISO_full);
+        
+        const matchedJagtIndexes = new Set();
+        
+        // 1. Scheduled Tasks
+        state.schedule.forEach((row, idx) => {
+            const slot = row[dayName] || { title: "Free Time", category: "break" };
+            const isTaskCategory = ["python", "dsa", "web", "app", "design"].includes(slot.category);
+            
+            if (isTaskCategory) {
+                const taskId = `slot_${idx}`;
+                const isChecked = dayChecked[taskId] || false;
+                const taskName = `${row.time} - ${slot.title}`;
+                
+                let completedAt = null;
+                const jagtIndex = dayJagt.findIndex((jt, jIdx) => !matchedJagtIndexes.has(jIdx) && jt.text === taskName);
+                if (jagtIndex !== -1) {
+                    matchedJagtIndexes.add(jagtIndex);
+                    const jt = dayJagt[jagtIndex];
+                    const [cHour, cMin] = jt.time.split(':').map(Number);
+                    completedAt = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), cHour, cMin, 0, 0);
+                } else if (isChecked) {
+                    completedAt = new Date(dateObj);
+                }
+                
+                const scheduledDate = new Date(dateObj);
+                const mins = timeToMinutes(row.time);
+                scheduledDate.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+                
+                let status = "pending";
+                if (completedAt) {
+                    status = "done";
+                } else {
+                    const todayStr = new Date().toDateString();
+                    if (dateStr === todayStr) {
+                        status = "ongoing";
+                    }
+                }
+                
+                tasksList.push({
+                    id: `${dateISO_full}_sched_${idx}`,
+                    name: taskName,
+                    subject: slot.category === "web" ? "webdev" : slot.category === "app" ? "appdev" : slot.category,
+                    scheduledDate: scheduledDate,
+                    completedAt: completedAt,
+                    status: status
+                });
+            }
+        });
+        
+        // 2. Custom Tasks
+        dayCustom.forEach(task => {
+            const isChecked = dayChecked[task.id] || false;
+            const taskName = task.text;
+            
+            let completedAt = null;
+            const jagtIndex = dayJagt.findIndex((jt, jIdx) => !matchedJagtIndexes.has(jIdx) && jt.text === taskName);
+            if (jagtIndex !== -1) {
+                matchedJagtIndexes.add(jagtIndex);
+                const jt = dayJagt[jagtIndex];
+                const [cHour, cMin] = jt.time.split(':').map(Number);
+                completedAt = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), cHour, cMin, 0, 0);
+            } else if (isChecked) {
+                completedAt = new Date(dateObj);
+            }
+            
+            const scheduledDate = new Date(dateObj);
+            scheduledDate.setHours(0, 0, 0, 0);
+            
+            let status = "pending";
+            if (completedAt) {
+                status = "done";
+            } else {
+                const todayStr = new Date().toDateString();
+                if (dateStr === todayStr) {
+                    status = "ongoing";
+                }
+            }
+            
+            tasksList.push({
+                id: task.id,
+                name: taskName,
+                subject: detectCategory(taskName),
+                scheduledDate: scheduledDate,
+                completedAt: completedAt,
+                status: status
+            });
+        });
+        
+        // 3. Unmatched completed tasks in jagt_tasks
+        dayJagt.forEach((jt, jIdx) => {
+            if (!matchedJagtIndexes.has(jIdx)) {
+                const [cHour, cMin] = jt.time.split(':').map(Number);
+                const completedAt = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), cHour, cMin, 0, 0);
+                
+                const scheduledDate = new Date(dateObj);
+                scheduledDate.setHours(0, 0, 0, 0);
+                
+                tasksList.push({
+                    id: `${dateISO_full}_jagt_${jIdx}`,
+                    name: jt.text,
+                    subject: jt.cat,
+                    scheduledDate: scheduledDate,
+                    completedAt: completedAt,
+                    status: "done"
+                });
+            }
+        });
+    });
+    
+    return tasksList;
+}
+
+function getTasksForPeriod(period) {
+    const allTasks = getAllTasks();
+    const completedTasks = [];
+    const incompleteTasks = [];
+    
+    const now = new Date();
+    const todayStr = now.toDateString();
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toDateString();
+    
+    const currentDay = now.getDay();
+    const mondayDiff = currentDay === 0 ? -6 : 1 - currentDay;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + mondayDiff);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const weekDates = Object.values(getDatesForWeek());
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    allTasks.forEach(task => {
+        const completedDateStr = task.completedAt ? new Date(task.completedAt).toDateString() : null;
+        const completedTime = task.completedAt ? new Date(task.completedAt).getTime() : null;
+        const scheduledTime = new Date(task.scheduledDate).getTime();
+        const scheduledDateStr = new Date(task.scheduledDate).toDateString();
+        
+        if (period === "yesterday") {
+            if (completedDateStr === yesterdayStr) {
+                completedTasks.push(task);
+            } else if (!task.completedAt && scheduledDateStr === yesterdayStr) {
+                incompleteTasks.push(task);
+            }
+        } else if (period === "today") {
+            if (completedDateStr === todayStr) {
+                completedTasks.push(task);
+            } else if (!task.completedAt && scheduledDateStr === todayStr) {
+                incompleteTasks.push(task);
+            }
+        } else if (period === "week") {
+            if (completedTime && completedTime >= weekStart.getTime() && completedTime <= now.getTime()) {
+                completedTasks.push(task);
+            } else if (!task.completedAt && weekDates.includes(scheduledDateStr)) {
+                if (scheduledDateStr !== todayStr) {
+                    incompleteTasks.push(task);
+                }
+            }
+        } else if (period === "month") {
+            if (completedTime && completedTime >= new Date(currentYear, currentMonth, 1).getTime() && completedTime <= now.getTime()) {
+                completedTasks.push(task);
+            } else if (!task.completedAt && new Date(task.scheduledDate).getMonth() === currentMonth && new Date(task.scheduledDate).getFullYear() === currentYear) {
+                if (scheduledDateStr !== todayStr) {
+                    incompleteTasks.push(task);
+                }
+            }
+        } else if (period === "lifetime") {
+            if (task.completedAt !== null) {
+                completedTasks.push(task);
+            } else {
+                incompleteTasks.push(task);
+            }
+        }
+    });
+    
+    return { completedTasks, incompleteTasks };
+}
+
+function setActivePeriod(period) {
+    if (state.activePeriod === period) {
+        state.activePeriod = null;
+    } else {
+        state.activePeriod = period;
+        taskDetailSearchQuery = "";
+    }
+    
+    saveState();
+    renderTaskDetailPanel();
+    updateCardHighlights();
+    
+    if (state.currentView === "dashboard") {
+        renderAutoLoggerVisualizations();
+    }
+}
+
+function updateCardHighlights() {
+    const periods = ["yesterday", "today", "week", "month", "lifetime"];
+    periods.forEach(p => {
+        const card = document.getElementById(`card-${p}`);
+        if (card) {
+            if (state.activePeriod === p) {
+                card.classList.add("highlight");
+            } else {
+                card.classList.remove("highlight");
+            }
+        }
+    });
+}
+
+function formatTaskDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    const parts = d.toDateString().split(" ");
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${parts[1]} ${parts[2]} @ ${timeStr}`;
+}
+
+function getStatusLineText(task) {
+    const now = new Date();
+    const todayStr = now.toDateString();
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toDateString();
+    
+    if (task.completedAt) {
+        const compDate = new Date(task.completedAt);
+        const compStr = compDate.toDateString();
+        const timeStr = compDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        
+        if (compStr === todayStr) {
+            return `Completed today at ${timeStr}`;
+        } else if (compStr === yesterdayStr) {
+            return `Completed yesterday at ${timeStr}`;
+        } else {
+            const parts = compDate.toDateString().split(" ");
+            return `Completed on ${parts[1]} ${parts[2]} at ${timeStr}`;
+        }
+    } else {
+        const schedDate = new Date(task.scheduledDate);
+        const schedStr = schedDate.toDateString();
+        const timeStr = schedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        
+        const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const schedZero = new Date(schedDate.getFullYear(), schedDate.getMonth(), schedDate.getDate());
+        
+        if (schedStr === todayStr) {
+            return `Pending — still due today`;
+        } else if (schedStr === yesterdayStr) {
+            return `You did not complete this task yesterday`;
+        } else if (schedZero.getTime() < nowZero.getTime()) {
+            const parts = schedDate.toDateString().split(" ");
+            return `You did not complete this task on ${parts[1]} ${parts[2]}`;
+        } else {
+            const parts = schedDate.toDateString().split(" ");
+            return `Pending — due on ${parts[1]} ${parts[2]} at ${timeStr}`;
+        }
+    }
+}
+
+function renderTaskDetailPanel() {
+    const panel = document.getElementById("task-detail-panel");
+    if (!panel) return;
+    
+    if (!state.activePeriod) {
+        panel.style.display = "none";
+        panel.classList.remove("active");
+        return;
+    }
+    
+    panel.style.display = "flex";
+    panel.classList.add("active");
+    
+    const period = state.activePeriod;
+    const { completedTasks, incompleteTasks } = getTasksForPeriod(period);
+    
+    const titles = {
+        yesterday: "Yesterday's Tasks",
+        today: "Today's Tasks",
+        week: "This Week's Tasks",
+        month: "This Month's Tasks",
+        lifetime: "All-Time Tasks"
+    };
+    
+    const pendingLabels = {
+        yesterday: "Incomplete",
+        today: "Ongoing",
+        week: "Incomplete",
+        month: "Incomplete",
+        lifetime: "Incomplete"
+    };
+    
+    const titleText = titles[period] || "Tasks";
+    const pendingLabel = pendingLabels[period] || "Pending";
+    
+    let filteredCompleted = completedTasks;
+    let filteredIncomplete = incompleteTasks;
+    
+    if (period === "lifetime" && taskDetailSearchQuery.trim() !== "") {
+        const query = taskDetailSearchQuery.toLowerCase().trim();
+        filteredCompleted = completedTasks.filter(t => t.name.toLowerCase().includes(query));
+        filteredIncomplete = incompleteTasks.filter(t => t.name.toLowerCase().includes(query));
+    }
+    
+    panel.innerHTML = `
+        <div class="panel-header">
+            <div class="panel-title-area">
+                <h3 class="panel-title">${titleText}</h3>
+                <div class="panel-badges">
+                    <span class="panel-badge badge-done">${filteredCompleted.length} Completed</span>
+                    <span class="panel-badge badge-pending">${filteredIncomplete.length} ${pendingLabel}</span>
+                </div>
+            </div>
+            <button class="panel-close-btn" id="panel-close-trigger" title="Close Panel">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        
+        ${period === 'lifetime' ? `
+        <div class="panel-search-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="panel-search-input" placeholder="Search tasks by name..." spellcheck="false" value="${taskDetailSearchQuery}">
+        </div>
+        ` : ''}
+        
+        <div class="panel-lists-container ${period === 'lifetime' ? 'scrollable-lists' : ''}">
+            <div class="panel-section" id="section-completed">
+                <div class="panel-section-header" id="header-completed">
+                    <div class="section-label">
+                        <i data-lucide="check-circle" class="text-green"></i>
+                        <span>Done</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+                </div>
+                <div class="panel-section-content" id="content-completed"></div>
+            </div>
+            
+            <div class="panel-section" id="section-incomplete">
+                <div class="panel-section-header" id="header-incomplete">
+                    <div class="section-label">
+                        <i data-lucide="${period === 'today' ? 'play' : 'clock'}" class="${period === 'today' ? 'text-blue' : 'text-orange'}"></i>
+                        <span>${pendingLabel}</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="section-toggle-icon"></i>
+                </div>
+                <div class="panel-section-content" id="content-incomplete"></div>
+            </div>
+        </div>
+    `;
+    
+    renderListRows(filteredCompleted, "completed");
+    renderListRows(filteredIncomplete, "incomplete");
+    
+    document.getElementById("panel-close-trigger").addEventListener("click", () => {
+        setActivePeriod(null);
+    });
+    
+    if (period === "lifetime") {
+        const searchInput = document.getElementById("panel-search-input");
+        searchInput.addEventListener("input", (e) => {
+            taskDetailSearchQuery = e.target.value;
+            const query = taskDetailSearchQuery.toLowerCase().trim();
+            const searchCompleted = completedTasks.filter(t => t.name.toLowerCase().includes(query));
+            const searchIncomplete = incompleteTasks.filter(t => t.name.toLowerCase().includes(query));
+            
+            panel.querySelector(".badge-done").textContent = `${searchCompleted.length} Completed`;
+            panel.querySelector(".badge-pending").textContent = `${searchIncomplete.length} ${pendingLabel}`;
+            
+            renderListRows(searchCompleted, "completed");
+            renderListRows(searchIncomplete, "incomplete");
+        });
+    }
+    
+    document.getElementById("header-completed").addEventListener("click", () => {
+        document.getElementById("section-completed").classList.toggle("collapsed");
+    });
+    
+    document.getElementById("header-incomplete").addEventListener("click", () => {
+        document.getElementById("section-incomplete").classList.toggle("collapsed");
+    });
+    
+    safeCreateIcons();
+}
+
+function renderListRows(tasks, sectionId) {
+    const container = document.getElementById(`content-${sectionId}`);
+    if (!container) return;
+    
+    container.innerHTML = "";
+    
+    if (tasks.length === 0) {
+        container.innerHTML = `<p class="text-muted" style="font-size: 0.78rem; font-style: italic; text-align: center; padding: 10px 0;">No tasks ${sectionId === 'completed' ? 'completed' : 'pending'} for this period</p>`;
+        return;
+    }
+    
+    const catBadges = {
+        python: "badge-python",
+        dsa: "badge-dsa",
+        webdev: "badge-webdev",
+        appdev: "badge-appdev",
+        design: "badge-design",
+        leet: "badge-leet",
+        revision: "badge-revision",
+        other: "badge-other"
+    };
+    
+    const catLabels = {
+        python: "Python + AI",
+        dsa: "DSA",
+        webdev: "Web Dev",
+        appdev: "App Dev",
+        design: "Design",
+        leet: "LeetCode",
+        revision: "Revision",
+        other: "Other"
+    };
+    
+    tasks.forEach(task => {
+        const row = document.createElement("div");
+        row.className = "task-row";
+        
+        let iconHtml = '';
+        if (sectionId === "completed") {
+            iconHtml = `<i data-lucide="check" class="text-green"></i>`;
+        } else {
+            if (task.status === "ongoing") {
+                iconHtml = `<span class="pulsing-dot"></span>`;
+            } else {
+                iconHtml = `<i data-lucide="clock" class="text-orange"></i>`;
+            }
+        }
+        
+        const displayTime = formatTaskDate(sectionId === "completed" ? task.completedAt : task.scheduledDate);
+        const statusLine = getStatusLineText(task);
+        
+        row.innerHTML = `
+            <div class="task-row-left">
+                <div class="task-row-icon-wrap">
+                    ${iconHtml}
+                </div>
+                <div class="task-row-text-group" style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
+                    <span class="task-row-name" title="${task.name}">${task.name}</span>
+                    <span class="task-row-status-line" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 400;">${statusLine}</span>
+                </div>
+            </div>
+            <div class="task-row-right">
+                <span class="logger-cat-badge ${catBadges[task.subject] || 'badge-other'}">${catLabels[task.subject] || task.subject}</span>
+                <span class="task-row-time">${displayTime}</span>
+            </div>
+        `;
+        
+        container.appendChild(row);
+    });
+    
+    safeCreateIcons();
+}
+
+function initStatCardClickListeners() {
+    const periods = ["yesterday", "today", "week", "month", "lifetime"];
+    periods.forEach(p => {
+        const card = document.getElementById(`card-${p}`);
+        if (card) {
+            card.addEventListener("click", () => {
+                setActivePeriod(p);
+            });
+        }
+    });
+}
+
 function autoLogToAnalytics(taskText) {
     let tasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
     const time = now.toTimeString().slice(0, 5);
-
-    function detectCategory(text) {
-        text = text.toLowerCase();
-        if (text.includes('python') || text.includes('ai') || text.includes('ml'))
-            return 'python';
-        if (text.includes('dsa') || text.includes('array') || text.includes('tree')
-            || text.includes('stack') || text.includes('queue') || text.includes('graph'))
-            return 'dsa';
-        if (text.includes('web') || text.includes('html') || text.includes('react')
-            || text.includes('node') || text.includes('js'))
-            return 'webdev';
-        if (text.includes('app dev') || text.includes('app'))
-            return 'appdev';
-        if (text.includes('photoshop') || text.includes('premiere')
-            || text.includes('canva') || text.includes('design')
-            || text.includes('after effects'))
-            return 'design';
-        if (text.includes('leetcode') || text.includes('leet'))
-            return 'leet';
-        if (text.includes('revision') || text.includes('review'))
-            return 'revision';
-        return 'other';
-    }
 
     const cat = detectCategory(taskText);
     const newEntry = {
@@ -2387,29 +2949,12 @@ function renderAutoLoggerVisualizations() {
     const container = document.getElementById("dashboard-auto-logger-row");
     if (!container || state.currentView !== "dashboard") return;
 
-    const tasks = JSON.parse(localStorage.getItem('jagt_tasks') || '[]');
-
-    // 1. Calculate counts
-    const todayStr = new Date().toISOString().slice(0, 10);
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
-    const currentMonthStr = new Date().toISOString().slice(0, 7); // "YYYY-MM"
-
-    // Weekly dateStrings in YYYY-MM-DD
-    const datesForWeek = getDatesForWeek();
-    const weekDateStrings = Object.values(datesForWeek).map(dateStr => {
-        const d = new Date(dateStr);
-        return d.toISOString().slice(0, 10);
-    });
-
-    const yesterdayCount = tasks.filter(t => t.date === yesterdayStr).length;
-    const todayCount = tasks.filter(t => t.date === todayStr).length;
-    const weekCount = tasks.filter(t => weekDateStrings.includes(t.date)).length;
-    const monthCount = tasks.filter(t => t.date.startsWith(currentMonthStr)).length;
-    const totalCount = tasks.length;
+    // 1. Calculate counts using getTasksForPeriod to ensure 100% alignment
+    const yesterdayCount = getTasksForPeriod("yesterday").completedTasks.length;
+    const todayCount = getTasksForPeriod("today").completedTasks.length;
+    const weekCount = getTasksForPeriod("week").completedTasks.length;
+    const monthCount = getTasksForPeriod("month").completedTasks.length;
+    const totalCount = getTasksForPeriod("lifetime").completedTasks.length;
 
     const yesterdayEl = document.getElementById("log-yesterday-cnt");
     const todayEl = document.getElementById("log-today-cnt");
@@ -2422,6 +2967,43 @@ function renderAutoLoggerVisualizations() {
     if (weekEl) weekEl.textContent = weekCount;
     if (monthEl) monthEl.textContent = monthCount;
     if (totalEl) totalEl.textContent = totalCount;
+
+    // Filter tasks based on activePeriod for Subject Performance and Ordered Task Log (Step 7 Sync)
+    const activePeriod = state.activePeriod || "lifetime";
+    const completedForPeriod = getTasksForPeriod(activePeriod).completedTasks;
+    const filteredTasks = completedForPeriod.map(t => ({
+        text: t.name,
+        cat: t.subject,
+        date: t.completedAt ? new Date(t.completedAt).toISOString().slice(0, 10) : new Date(t.scheduledDate).toISOString().slice(0, 10),
+        time: t.completedAt ? new Date(t.completedAt).toTimeString().slice(0, 5) : ""
+    }));
+
+    let perfTitleText = "Subject Performance";
+    let logTitleText = "Ordered Task Log (Recent)";
+
+    if (state.activePeriod) {
+        if (state.activePeriod === "yesterday") {
+            perfTitleText = "Subject Performance (Yesterday)";
+            logTitleText = "Ordered Task Log (Yesterday)";
+        } else if (state.activePeriod === "today") {
+            perfTitleText = "Subject Performance (Today)";
+            logTitleText = "Ordered Task Log (Today)";
+        } else if (state.activePeriod === "week") {
+            perfTitleText = "Subject Performance (This Week)";
+            logTitleText = "Ordered Task Log (This Week)";
+        } else if (state.activePeriod === "month") {
+            perfTitleText = "Subject Performance (This Month)";
+            logTitleText = "Ordered Task Log (This Month)";
+        } else if (state.activePeriod === "lifetime") {
+            perfTitleText = "Subject Performance (Lifetime)";
+            logTitleText = "Ordered Task Log (Lifetime)";
+        }
+    }
+
+    const perfTitleEl = document.getElementById("logger-perf-title");
+    const logTitleEl = document.getElementById("logger-log-title");
+    if (perfTitleEl) perfTitleEl.textContent = perfTitleText;
+    if (logTitleEl) logTitleEl.textContent = logTitleText;
 
     // 2. Render Subject Performance Progress Bars
     const barsContainer = document.getElementById("logger-bars-container");
@@ -2438,7 +3020,7 @@ function renderAutoLoggerVisualizations() {
             other: 0
         };
 
-        tasks.forEach(t => {
+        filteredTasks.forEach(t => {
             if (catCounts[t.cat] !== undefined) {
                 catCounts[t.cat]++;
             } else {
@@ -2500,7 +3082,7 @@ function renderAutoLoggerVisualizations() {
     if (historyContainer) {
         historyContainer.innerHTML = "";
 
-        const recentTasks = [...tasks].reverse().slice(0, 6);
+        const recentTasks = [...filteredTasks].reverse().slice(0, 6);
 
         if (recentTasks.length === 0) {
             historyContainer.innerHTML = `<p class="text-muted" style="font-size: 0.8rem; text-align: center; padding: 30px 0;">No tasks auto-logged yet. Tick checklist items to log them!</p>`;
@@ -2556,9 +3138,7 @@ function renderAutoLoggerVisualizations() {
 // Global listeners and polling for jagt_tasks
 window.addEventListener('storage', function(e) {
     if (e.key === 'jagt_tasks') {
-        if (state.currentView === "dashboard") {
-            renderAutoLoggerVisualizations();
-        }
+        onTaskStateChanged();
     }
 });
 

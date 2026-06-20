@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,15 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
 </head>
+
 <body class="font-sans">
     <!-- Sidebar backdrop overlay for mobile drawer -->
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
@@ -21,10 +25,10 @@
     <button class="floating-menu-btn" id="mobile-menu-toggle" title="Open Menu">
         <i data-lucide="menu"></i>
     </button>
-    
+
     <!-- Workspace Layout -->
     <div class="workspace-container">
-        
+
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -39,7 +43,7 @@
                     <i data-lucide="chevron-left"></i>
                 </button>
             </div>
-            
+
             <div class="sidebar-menu">
                 <div class="menu-section">
                     <div class="menu-section-header">Favorites</div>
@@ -58,7 +62,7 @@
                         </li>
                     </ul>
                 </div>
-                
+
                 <div class="menu-section">
                     <div class="menu-section-header-row">
                         <span class="menu-section-header">Private Pages</span>
@@ -75,7 +79,7 @@
                     </ul>
                 </div>
             </div>
-            
+
             <div class="sidebar-footer">
                 <button class="footer-btn" id="theme-toggle" title="Toggle Dark/Light Mode">
                     <div class="theme-toggle-content">
@@ -131,13 +135,15 @@
                     <span class="live-datetime-text" id="live-datetime-text">Initializing real-time clock...</span>
                     <span class="cloud-status-badge cloud-status-offline" id="cloud-sync-status">💾 Local only</span>
                 </div>
-                <h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">Weekly Study Schedule</h1>
-                <p class="page-description" id="page-description">Welcome back! Manage your hourly targets, log your learning progress, and customize your timetable.</p>
+                <h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">Weekly Study Schedule
+                </h1>
+                <p class="page-description" id="page-description">Welcome back! Manage your hourly targets, log your
+                    learning progress, and customize your timetable.</p>
             </div>
 
             <!-- Views Container -->
             <div class="views-wrapper">
-                
+
                 <!-- 1. DASHBOARD VIEW -->
                 <section id="dashboard-view" class="view-panel active">
                     <!-- Stats Grid -->
@@ -149,7 +155,8 @@
                             </div>
                             <div class="stat-value" id="stat-study-hours">0h / 36h</div>
                             <div class="stat-progress-bar">
-                                <div class="stat-progress-fill bg-blue" id="stat-study-progress" style="width: 0%"></div>
+                                <div class="stat-progress-fill bg-blue" id="stat-study-progress" style="width: 0%">
+                                </div>
                             </div>
                             <div class="stat-footer">Target: 36 hrs/week</div>
                         </div>
@@ -160,7 +167,8 @@
                             </div>
                             <div class="stat-value" id="stat-checklist-percent">0%</div>
                             <div class="stat-progress-bar">
-                                <div class="stat-progress-fill bg-green" id="stat-checklist-progress" style="width: 0%"></div>
+                                <div class="stat-progress-fill bg-green" id="stat-checklist-progress" style="width: 0%">
+                                </div>
                             </div>
                             <div class="stat-footer" id="stat-checklist-summary">0 of 0 tasks completed</div>
                         </div>
@@ -171,7 +179,8 @@
                             </div>
                             <div class="stat-value" id="stat-timer-display">25:00</div>
                             <div class="stat-progress-bar">
-                                <div class="stat-progress-fill bg-purple" id="stat-timer-progress" style="width: 100%"></div>
+                                <div class="stat-progress-fill bg-purple" id="stat-timer-progress" style="width: 100%">
+                                </div>
                             </div>
                             <div class="stat-footer" id="stat-timer-state">Pomodoro Timer: Idle</div>
                         </div>
@@ -192,7 +201,8 @@
                                     <!-- Populated by JavaScript -->
                                 </div>
                                 <div class="add-task-form">
-                                    <input type="text" id="new-task-input" placeholder="Add custom item..." spellcheck="false">
+                                    <input type="text" id="new-task-input" placeholder="Add custom item..."
+                                        spellcheck="false">
                                     <button id="add-task-btn"><i data-lucide="plus"></i></button>
                                 </div>
                             </div>
@@ -203,8 +213,10 @@
                             <div class="widget-header">
                                 <h3><i data-lucide="timer"></i> Focus Timer</h3>
                                 <div class="timer-modes">
-                                    <button class="timer-mode-btn active" data-time="1500" data-mode="pomodoro">Focus</button>
-                                    <button class="timer-mode-btn" data-time="300" data-mode="short">Short Break</button>
+                                    <button class="timer-mode-btn active" data-time="1500"
+                                        data-mode="pomodoro">Focus</button>
+                                    <button class="timer-mode-btn" data-time="300" data-mode="short">Short
+                                        Break</button>
                                     <button class="timer-mode-btn" data-time="900" data-mode="long">Long Break</button>
                                 </div>
                             </div>
@@ -212,7 +224,8 @@
                                 <div class="timer-circle-container">
                                     <svg class="timer-svg" viewBox="0 0 100 100">
                                         <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
-                                        <circle class="timer-circle-fill" id="timer-progress-ring" cx="50" cy="50" r="45"></circle>
+                                        <circle class="timer-circle-fill" id="timer-progress-ring" cx="50" cy="50"
+                                            r="45"></circle>
                                     </svg>
                                     <div class="timer-time" id="timer-clock">25:00</div>
                                 </div>
@@ -238,21 +251,24 @@
                                         <span class="habit-name">Hydration (3L)</span>
                                         <span class="habit-streak" id="streak-water">0 days</span>
                                     </div>
-                                    <button class="habit-circle-btn" id="habit-water"><i data-lucide="droplet"></i></button>
+                                    <button class="habit-circle-btn" id="habit-water"><i
+                                            data-lucide="droplet"></i></button>
                                 </div>
                                 <div class="habit-row">
                                     <div class="habit-info">
                                         <span class="habit-name">Daily Exercise</span>
                                         <span class="habit-streak" id="streak-exercise">0 days</span>
                                     </div>
-                                    <button class="habit-circle-btn" id="habit-exercise"><i data-lucide="activity"></i></button>
+                                    <button class="habit-circle-btn" id="habit-exercise"><i
+                                            data-lucide="activity"></i></button>
                                 </div>
                                 <div class="habit-row">
                                     <div class="habit-info">
                                         <span class="habit-name">LeetCode Practice</span>
                                         <span class="habit-streak" id="streak-code">0 days</span>
                                     </div>
-                                    <button class="habit-circle-btn" id="habit-code"><i data-lucide="terminal"></i></button>
+                                    <button class="habit-circle-btn" id="habit-code"><i
+                                            data-lucide="terminal"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -285,7 +301,8 @@
                         <div class="widget-card visualization-widget">
                             <div class="widget-header">
                                 <h3><i data-lucide="bar-chart-3"></i> Task Completion Analytics</h3>
-                                <span class="badge bg-purple" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Real-time</span>
+                                <span class="badge bg-purple"
+                                    style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Real-time</span>
                             </div>
                             <div class="widget-content viz-content-grid">
                                 <!-- 1. Daily Progress -->
@@ -294,7 +311,8 @@
                                     <div class="radial-gauge-container">
                                         <svg class="radial-svg" viewBox="0 0 100 100">
                                             <circle class="radial-circle-bg" cx="50" cy="50" r="40"></circle>
-                                            <circle class="radial-circle-fill" id="viz-radial-ring" cx="50" cy="50" r="40"></circle>
+                                            <circle class="radial-circle-fill" id="viz-radial-ring" cx="50" cy="50"
+                                                r="40"></circle>
                                         </svg>
                                         <div class="radial-center-text">
                                             <span class="radial-val" id="viz-daily-pct">0%</span>
@@ -318,21 +336,24 @@
                                     <span class="viz-card-title">Completions Overview</span>
                                     <div class="summary-stats-stack">
                                         <div class="summary-stat-item">
-                                            <div class="summary-stat-icon bg-green-dim"><i data-lucide="calendar"></i></div>
+                                            <div class="summary-stat-icon bg-green-dim"><i data-lucide="calendar"></i>
+                                            </div>
                                             <div class="summary-stat-data">
                                                 <span class="summary-stat-val" id="viz-monthly-count">0</span>
                                                 <span class="summary-stat-label">This Month</span>
                                             </div>
                                         </div>
                                         <div class="summary-stat-item">
-                                            <div class="summary-stat-icon bg-blue-dim"><i data-lucide="trophy"></i></div>
+                                            <div class="summary-stat-icon bg-blue-dim"><i data-lucide="trophy"></i>
+                                            </div>
                                             <div class="summary-stat-data">
                                                 <span class="summary-stat-val" id="viz-lifetime-count">0</span>
                                                 <span class="summary-stat-label">Lifetime Total</span>
                                             </div>
                                         </div>
                                         <div class="summary-stat-item">
-                                            <div class="summary-stat-icon bg-purple-dim"><i data-lucide="trending-up"></i></div>
+                                            <div class="summary-stat-icon bg-purple-dim"><i
+                                                    data-lucide="trending-up"></i></div>
                                             <div class="summary-stat-data">
                                                 <span class="summary-stat-val" id="viz-daily-avg">0</span>
                                                 <span class="summary-stat-label">Daily Average</span>
@@ -349,37 +370,42 @@
                         <div class="widget-card auto-logger-widget">
                             <div class="widget-header">
                                 <h3><i data-lucide="check-circle-2"></i> Auto-Logger Task History</h3>
-                                <span class="badge bg-green" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Auto-Sync Enabled</span>
+                                <span class="badge bg-green"
+                                    style="font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; color: white;">Auto-Sync
+                                    Enabled</span>
                             </div>
                             <div class="widget-content logger-viz-grid">
                                 <!-- 1. Counts Row -->
                                 <div class="logger-stats-row">
-                                    <div class="logger-stat-card">
+                                    <div class="logger-stat-card" id="card-yesterday" data-period="yesterday">
                                         <span class="logger-stat-num" id="log-yesterday-cnt">0</span>
                                         <span class="logger-stat-lbl">Yesterday</span>
                                     </div>
-                                    <div class="logger-stat-card">
+                                    <div class="logger-stat-card" id="card-today" data-period="today">
                                         <span class="logger-stat-num" id="log-today-cnt">0</span>
                                         <span class="logger-stat-lbl">Today</span>
                                     </div>
-                                    <div class="logger-stat-card">
+                                    <div class="logger-stat-card" id="card-week" data-period="week">
                                         <span class="logger-stat-num" id="log-week-cnt">0</span>
                                         <span class="logger-stat-lbl">This Week</span>
                                     </div>
-                                    <div class="logger-stat-card">
+                                    <div class="logger-stat-card" id="card-month" data-period="month">
                                         <span class="logger-stat-num" id="log-month-cnt">0</span>
                                         <span class="logger-stat-lbl">This Month</span>
                                     </div>
-                                    <div class="logger-stat-card highlight">
+                                    <div class="logger-stat-card" id="card-lifetime" data-period="lifetime">
                                         <span class="logger-stat-num" id="log-total-cnt">0</span>
                                         <span class="logger-stat-lbl">Lifetime</span>
                                     </div>
                                 </div>
 
+                                <!-- Detailed Tasks Period Panel -->
+                                <div id="task-detail-panel" class="task-detail-panel"></div>
+
                                 <div class="logger-main-content">
                                     <!-- 2. Subject Progress Bars -->
                                     <div class="logger-categories-box">
-                                        <h4 class="logger-section-title">Subject Performance</h4>
+                                        <h4 class="logger-section-title" id="logger-perf-title">Subject Performance</h4>
                                         <div class="logger-bars-stack" id="logger-bars-container">
                                             <!-- Dynamic progress bars -->
                                         </div>
@@ -387,7 +413,7 @@
 
                                     <!-- 3. Recent Log List -->
                                     <div class="logger-history-box">
-                                        <h4 class="logger-section-title">Ordered Task Log (Recent)</h4>
+                                        <h4 class="logger-section-title" id="logger-log-title">Ordered Task Log (Recent)</h4>
                                         <div class="logger-history-list" id="logger-history-container">
                                             <!-- Dynamic log items -->
                                         </div>
@@ -402,7 +428,8 @@
                 <section id="schedule-view" class="view-panel">
                     <div class="view-header-actions" style="justify-content: flex-end; margin-bottom: 16px;">
                         <div class="button-group">
-                            <button class="btn secondary" id="reset-schedule-btn"><i data-lucide="rotate-ccw"></i> Reset to Default</button>
+                            <button class="btn secondary" id="reset-schedule-btn"><i data-lucide="rotate-ccw"></i> Reset
+                                to Default</button>
                         </div>
                     </div>
                     <div class="schedule-table-wrapper">
@@ -428,7 +455,7 @@
 
                 <!-- 3. GOALS & ANALYTICS VIEW -->
                 <section id="goals-view" class="view-panel">
-                    
+
 
                     <div class="goals-grid" id="goals-container">
                         <!-- Dynamically filled with subject goal cards -->
@@ -441,29 +468,42 @@
                         <div class="doc-editor-header">
                             <div class="doc-meta">
                                 <button class="doc-emoji-btn" id="doc-emoji-btn">📝</button>
-                                <input type="text" class="doc-title-input" id="doc-title-input" placeholder="Untitled Note" spellcheck="false">
+                                <input type="text" class="doc-title-input" id="doc-title-input"
+                                    placeholder="Untitled Note" spellcheck="false">
                             </div>
                             <div class="doc-editor-actions" style="display: flex; gap: 8px; align-items: center;">
-                                <div class="doc-mode-toggle" style="display: flex; background: var(--bg-card-hover); padding: 2px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
-                                    <button class="doc-mode-btn active" id="doc-edit-mode-btn" title="Edit Mode" style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-primary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Edit</button>
-                                    <button class="doc-mode-btn" id="doc-preview-mode-btn" title="Preview Mode" style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i data-lucide="eye" style="width: 12px; height: 12px;"></i> Preview</button>
+                                <div class="doc-mode-toggle"
+                                    style="display: flex; background: var(--bg-card-hover); padding: 2px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
+                                    <button class="doc-mode-btn active" id="doc-edit-mode-btn" title="Edit Mode"
+                                        style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-primary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i
+                                            data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Edit</button>
+                                    <button class="doc-mode-btn" id="doc-preview-mode-btn" title="Preview Mode"
+                                        style="border: none; background: transparent; padding: 4px 10px; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 4px;"><i
+                                            data-lucide="eye" style="width: 12px; height: 12px;"></i> Preview</button>
                                 </div>
-                                <button class="btn danger" id="delete-doc-btn" title="Delete note" style="padding: 6px 12px; font-size: 0.75rem; font-weight: 500;"><i data-lucide="trash-2"></i> Delete Note</button>
+                                <button class="btn danger" id="delete-doc-btn" title="Delete note"
+                                    style="padding: 6px 12px; font-size: 0.75rem; font-weight: 500;"><i
+                                        data-lucide="trash-2"></i> Delete Note</button>
                             </div>
                         </div>
                         <div class="doc-editor-body">
-                            <textarea class="doc-textarea" id="doc-textarea" placeholder="Start typing here... Use markdown or plain text to structure your thoughts." spellcheck="false"></textarea>
-                            <div class="doc-preview-area markdown-body" id="doc-preview-area" style="display: none; width: 100%; min-height: 400px; padding: 10px 0; overflow-y: auto; color: var(--text-primary); font-family: var(--font-family);"></div>
+                            <textarea class="doc-textarea" id="doc-textarea"
+                                placeholder="Start typing here... Use markdown or plain text to structure your thoughts."
+                                spellcheck="false"></textarea>
+                            <div class="doc-preview-area markdown-body" id="doc-preview-area"
+                                style="display: none; width: 100%; min-height: 400px; padding: 10px 0; overflow-y: auto; color: var(--text-primary); font-family: var(--font-family);">
+                            </div>
                         </div>
                         <div class="doc-editor-footer">
-                            <span class="doc-autosave-status"><i data-lucide="check"></i> Auto-saved in local storage</span>
+                            <span class="doc-autosave-status"><i data-lucide="check"></i> Auto-saved in local
+                                storage</span>
                         </div>
                     </div>
                 </section>
 
                 <!-- 5. SETTINGS VIEW -->
                 <section id="settings-view" class="view-panel">
-                    
+
 
                     <div class="settings-card">
                         <h3>Typography & Font</h3>
@@ -490,14 +530,18 @@
 
                     <div class="settings-card cloud-sync-card">
                         <h3>☁️ Cloud Sync &amp; Real-Time Tracking</h3>
-                        <p class="settings-desc">Connect to a free <strong>JSONBin.io</strong> cloud database to sync your streaks, goals, and habits across all devices — even on Vercel. Your data persists day by day in the cloud.</p>
+                        <p class="settings-desc">Connect to a free <strong>JSONBin.io</strong> cloud database to sync
+                            your streaks, goals, and habits across all devices — even on Vercel. Your data persists day
+                            by day in the cloud.</p>
 
                         <div class="cloud-setup-steps">
                             <div class="cloud-step">
                                 <span class="step-num">1</span>
                                 <div class="step-content">
                                     <strong>Get a free API Key</strong>
-                                    <span>Sign up at <a href="https://jsonbin.io" target="_blank" class="settings-link">jsonbin.io</a> → go to API Keys → copy your Master Key</span>
+                                    <span>Sign up at <a href="https://jsonbin.io" target="_blank"
+                                            class="settings-link">jsonbin.io</a> → go to API Keys → copy your Master
+                                        Key</span>
                                 </div>
                             </div>
                             <div class="cloud-step">
@@ -518,38 +562,53 @@
 
                         <div class="form-group" style="margin-top: 16px;">
                             <label for="cloud-api-key-input">JSONBin Master API Key</label>
-                            <input type="password" id="cloud-api-key-input" placeholder="$2a$10$...(your key)" spellcheck="false" style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
+                            <input type="password" id="cloud-api-key-input" placeholder="$2a$10$...(your key)"
+                                spellcheck="false"
+                                style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
                         </div>
 
                         <div class="form-group" style="margin-top: 10px;">
-                            <label for="cloud-bin-id-input">Bin ID <span style="opacity:0.6;font-weight:400;">(auto-filled after creating)</span></label>
-                            <input type="text" id="cloud-bin-id-input" placeholder="e.g. 686b3f2facd3cb34a8a2b9d1" spellcheck="false" style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
+                            <label for="cloud-bin-id-input">Bin ID <span
+                                    style="opacity:0.6;font-weight:400;">(auto-filled after creating)</span></label>
+                            <input type="text" id="cloud-bin-id-input" placeholder="e.g. 686b3f2facd3cb34a8a2b9d1"
+                                spellcheck="false"
+                                style="width:100%; margin-top:4px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card-hover); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem;">
                         </div>
 
                         <div class="button-row" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
-                            <button class="btn secondary" id="cloud-create-bin-btn"><i data-lucide="plus-circle"></i> ✨ Create New Bin</button>
-                            <button class="btn primary" id="cloud-connect-btn"><i data-lucide="cloud"></i> Connect &amp; Sync</button>
-                            <button class="btn secondary" id="cloud-sync-now-btn"><i data-lucide="refresh-cw"></i> Sync Now</button>
-                            <button class="btn danger" id="cloud-disconnect-btn"><i data-lucide="cloud-off"></i> Disconnect</button>
+                            <button class="btn secondary" id="cloud-create-bin-btn"><i data-lucide="plus-circle"></i> ✨
+                                Create New Bin</button>
+                            <button class="btn primary" id="cloud-connect-btn"><i data-lucide="cloud"></i> Connect &amp;
+                                Sync</button>
+                            <button class="btn secondary" id="cloud-sync-now-btn"><i data-lucide="refresh-cw"></i> Sync
+                                Now</button>
+                            <button class="btn danger" id="cloud-disconnect-btn"><i data-lucide="cloud-off"></i>
+                                Disconnect</button>
                         </div>
                     </div>
 
                     <div class="settings-card">
                         <h3>Notion Help Guides</h3>
-                        <p class="settings-desc">Recreate or reset the default Notion-style workspace help and resources pages.</p>
+                        <p class="settings-desc">Recreate or reset the default Notion-style workspace help and resources
+                            pages.</p>
                         <div class="button-row">
-                            <button class="btn primary" id="recreate-guides-btn"><i data-lucide="help-circle"></i> Restore Default Guides</button>
+                            <button class="btn primary" id="recreate-guides-btn"><i data-lucide="help-circle"></i>
+                                Restore Default Guides</button>
                         </div>
                     </div>
 
                     <div class="settings-card">
                         <h3>Backup & Data Management</h3>
-                        <p class="settings-desc">Download a local JSON backup of your planner schedule, goals, checklist, and custom notes.</p>
+                        <p class="settings-desc">Download a local JSON backup of your planner schedule, goals,
+                            checklist, and custom notes.</p>
                         <div class="button-row">
-                            <button class="btn primary" id="export-data-btn"><i data-lucide="download"></i> Export Workspace Data</button>
-                            <button class="btn secondary" id="import-data-trigger"><i data-lucide="upload"></i> Import Workspace Data</button>
+                            <button class="btn primary" id="export-data-btn"><i data-lucide="download"></i> Export
+                                Workspace Data</button>
+                            <button class="btn secondary" id="import-data-trigger"><i data-lucide="upload"></i> Import
+                                Workspace Data</button>
                             <input type="file" id="import-data-file" style="display:none;" accept=".json">
-                            <button class="btn danger" id="clear-all-data-btn"><i data-lucide="trash-2"></i> Factory Reset Data</button>
+                            <button class="btn danger" id="clear-all-data-btn"><i data-lucide="trash-2"></i> Factory
+                                Reset Data</button>
                         </div>
                     </div>
                 </section>
@@ -563,9 +622,7 @@
                 </button>
                 <div class="workspace-breadcrumbs" id="workspace-breadcrumbs">
                     <i data-lucide="folder" class="breadcrumb-icon"></i>
-                    <span id="breadcrumb-parent">Workspace</span>
                     <span class="breadcrumb-separator">/</span>
-                    <span id="breadcrumb-current">Dashboard</span>
                 </div>
                 <button class="nav-btn" id="nav-next-btn" title="Next Page">
                     <span class="nav-btn-text">Next</span>
@@ -590,7 +647,8 @@
                 </div>
                 <div class="form-group">
                     <label for="event-title">Activity Title</label>
-                    <input type="text" id="event-title" placeholder="e.g. Python study, Web development" spellcheck="false">
+                    <input type="text" id="event-title" placeholder="e.g. Python study, Web development"
+                        spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label>Subject / Category</label>
@@ -617,4 +675,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
