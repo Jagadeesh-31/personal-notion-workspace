@@ -91,7 +91,7 @@ This application has been tailored to help you build skills in Python, AI, DSA, 
 // Cover image gradient configurations matching views
 const COVERS = {
     dashboard: "url('images/cover_dashboard.png') center/cover no-repeat",
-    schedule: "linear-gradient(135deg, #f97316 0%, #e11d48 50%, #9333ea 100%)",
+    schedule: "url('images/cover_schedule.png') center/cover no-repeat",
     goals: "url('images/cover_goals.png') center/cover no-repeat",
     settings: "linear-gradient(135deg, #64748b 0%, #475569 100%)",
     document: "linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%)"
